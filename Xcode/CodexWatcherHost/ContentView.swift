@@ -13,8 +13,17 @@ struct ContentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Codex Watcher")
-                    .font(.title2.weight(.semibold))
+                HStack(spacing: 10) {
+                    Image("QuotaScopeLogo")
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .accessibilityHidden(true)
+                    Text("QuotaScope")
+                        .font(.title2.weight(.semibold))
+                }
                 Text("Add the WidgetKit widget from macOS Edit Widgets, then drag it to your desktop.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -43,7 +52,7 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("How to add")
                     .font(.headline)
-                Text("Control-click the desktop wallpaper, choose Edit Widgets, search for Codex Watcher, then drag the widget to the desktop.")
+                Text("Control-click the desktop wallpaper, choose Edit Widgets, search for QuotaScope, then drag the widget to the desktop.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

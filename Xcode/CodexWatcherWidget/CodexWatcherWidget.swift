@@ -1,5 +1,8 @@
 import SwiftUI
 import WidgetKit
+#if WIDGET_PREVIEW_RENDER && os(macOS)
+import AppKit
+#endif
 
 struct CodexUsageEntry: TimelineEntry {
     let date: Date
@@ -10,11 +13,17 @@ struct CodexUsageProvider: TimelineProvider {
     private static let apiClient = CodexUsageAPIClient()
 
     func placeholder(in context: Context) -> CodexUsageEntry {
-        CodexUsageEntry(date: Date(), snapshot: Self.sampleSnapshot)
+        Self.sampleEntry
     }
 
     func getSnapshot(in context: Context, completion: @escaping @Sendable (CodexUsageEntry) -> Void) {
+        let isPreview = context.isPreview
         Task {
+            if isPreview {
+                completion(Self.sampleEntry)
+                return
+            }
+
             let now = Date()
             let snapshot = await Self.apiClient.loadSnapshot(now: now)
             completion(CodexUsageEntry(date: now, snapshot: snapshot))
@@ -30,236 +39,962 @@ struct CodexUsageProvider: TimelineProvider {
         }
     }
 
-    private static let sampleSnapshot = CodexUsageSnapshot(
+    static let sampleDate = Date(timeIntervalSince1970: 1_779_770_520)
+
+    static let sampleEntry = CodexUsageEntry(date: sampleDate, snapshot: sampleSnapshot)
+
+    static let sampleSnapshot = CodexUsageSnapshot(
         latestEvent: CodexUsageEvent(
-            timestamp: Date(),
+            timestamp: sampleDate,
             totalUsage: TokenUsage(inputTokens: 12_300_000, cachedInputTokens: 10_000_000, outputTokens: 45_000, totalTokens: 12_347_000),
             lastUsage: TokenUsage(inputTokens: 110_000, cachedInputTokens: 90_000, outputTokens: 10_000, totalTokens: 120_000),
             rateLimits: RateLimits(
-                primary: RateWindow(usedPercent: 7, windowMinutes: 300),
-                secondary: RateWindow(usedPercent: 20, windowMinutes: 10_080),
-                planType: "plus"
+                primary: RateWindow(usedPercent: 38, windowMinutes: 300, resetsAt: Date(timeIntervalSince1970: 1_779_783_600)),
+                secondary: RateWindow(usedPercent: 19, windowMinutes: 10_080, resetsAt: Date(timeIntervalSince1970: 1_780_213_800)),
+                planType: "prolite"
             )
         ),
         tokensLast5Hours: TokenUsage(totalTokens: 8_481_157),
         tokensLast7Days: TokenUsage(totalTokens: 176_629_938),
-        tokensToday: TokenUsage(inputTokens: 48_900_000, cachedInputTokens: 39_800_000, outputTokens: 2_700_000, totalTokens: 51_600_000),
-        tokensThisWeek: TokenUsage(inputTokens: 205_700_000, cachedInputTokens: 164_300_000, outputTokens: 9_900_000, totalTokens: 215_600_000),
+        tokensToday: TokenUsage(inputTokens: 129_800, cachedInputTokens: 91_600, outputTokens: 26_400, totalTokens: 128_400),
+        tokensThisWeek: TokenUsage(inputTokens: 727_100, cachedInputTokens: 512_300, outputTokens: 85_600, totalTokens: 812_700),
+        dailyUsageLast7Days: [
+            CodexDailyUsage(date: Date(timeIntervalSince1970: 1_779_235_200), usage: TokenUsage(totalTokens: 90_000)),
+            CodexDailyUsage(date: Date(timeIntervalSince1970: 1_779_321_600), usage: TokenUsage(totalTokens: 112_000)),
+            CodexDailyUsage(date: Date(timeIntervalSince1970: 1_779_408_000), usage: TokenUsage(totalTokens: 98_000)),
+            CodexDailyUsage(date: Date(timeIntervalSince1970: 1_779_494_400), usage: TokenUsage(totalTokens: 128_000)),
+            CodexDailyUsage(date: Date(timeIntervalSince1970: 1_779_580_800), usage: TokenUsage(totalTokens: 76_000)),
+            CodexDailyUsage(date: Date(timeIntervalSince1970: 1_779_667_200), usage: TokenUsage(totalTokens: 134_000)),
+            CodexDailyUsage(date: Date(timeIntervalSince1970: 1_779_753_600), usage: TokenUsage(totalTokens: 128_400))
+        ],
         eventCount: 3254
     )
 }
 
 struct CodexWatcherWidgetView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.widgetFamily) private var family
+
     let entry: CodexUsageProvider.Entry
+    var familyOverride: WidgetFamily?
 
     private var summary: CodexUsageSummary {
         CodexUsageSummary(snapshot: entry.snapshot, now: entry.date)
     }
 
+    private var renderedFamily: WidgetFamily {
+        familyOverride ?? family
+    }
+
     var body: some View {
         Group {
-            switch family {
+            switch renderedFamily {
             case .systemSmall:
-                smallView
+                SmallQuotaWidget(summary: summary)
+            case .systemLarge:
+                LargeQuotaWidget(summary: summary)
             default:
-                mediumView
+                MediumQuotaWidget(summary: summary)
             }
         }
-        .containerBackground(.background, for: .widget)
-    }
-
-    private var smallView: some View {
-        VStack(alignment: .leading, spacing: CGFloat(CodexWidgetLayoutMetrics.smallSectionSpacing)) {
-            header
-            limitRow(summary.fiveHourLimitLabelText, summary.fiveHourLimitText, summary.fiveHourLimitPercent)
-            limitRow(summary.sevenDayLimitLabelText, summary.sevenDayLimitText, summary.sevenDayLimitPercent)
-            HStack(alignment: .lastTextBaseline) {
-                Text("today")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(summary.todayTokensText)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-            }
-            VStack(alignment: .leading, spacing: 1) {
-                Text("input miss \(summary.todayInputMissText)")
-                Text("input cache \(summary.todayInputCacheText)")
-                Text("output \(summary.todayOutputText)")
-            }
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-            .minimumScaleFactor(0.75)
+        .background {
+            WidgetBackground()
         }
-        .padding(CGFloat(CodexWidgetLayoutMetrics.smallVerticalPadding))
-    }
-
-    private var mediumView: some View {
-        VStack(alignment: .leading, spacing: CGFloat(CodexWidgetLayoutMetrics.mediumSectionSpacing)) {
-            header
-            HStack(spacing: 10) {
-                limitBlock(summary.fiveHourLimitLabelText, summary.fiveHourLimitText, summary.fiveHourLimitPercent)
-                limitBlock(summary.sevenDayLimitLabelText, summary.sevenDayLimitText, summary.sevenDayLimitPercent)
-            }
-            HStack(alignment: .top, spacing: 12) {
-                tokenColumn(
-                    "today",
-                    total: summary.todayTokensText,
-                    miss: summary.todayInputMissText,
-                    cache: summary.todayInputCacheText,
-                    output: summary.todayOutputText,
-                    horizontalAlignment: .leading,
-                    frameAlignment: .leading,
-                    textAlignment: .leading
-                )
-                tokenColumn(
-                    "week",
-                    total: summary.thisWeekTokensText,
-                    miss: summary.thisWeekInputMissText,
-                    cache: summary.thisWeekInputCacheText,
-                    output: summary.thisWeekOutputText,
-                    horizontalAlignment: .trailing,
-                    frameAlignment: .trailing,
-                    textAlignment: .trailing
-                )
-            }
+        .containerBackground(for: .widget) {
+            WidgetBackground()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, CGFloat(CodexWidgetLayoutMetrics.mediumVerticalPadding))
-    }
-
-    private var header: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "terminal")
-                .font(.caption.weight(.semibold))
-            Text("Codex")
-                .font(.subheadline.weight(.semibold))
-            Spacer(minLength: 0)
-            Text(summary.planBadgeText)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-    }
-
-    private func limitBlock(_ title: String, _ value: String, _ percent: Double?) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack {
-                Text(title)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                Spacer()
-                Text(value)
-                    .font(.caption2.weight(.semibold))
-                    .monospacedDigit()
-            }
-            usageProgress(percent)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-    }
-
-    private func tokenColumn(
-        _ title: String,
-        total: String,
-        miss: String,
-        cache: String,
-        output: String,
-        horizontalAlignment: HorizontalAlignment,
-        frameAlignment: Alignment,
-        textAlignment: TextAlignment
-    ) -> some View {
-        VStack(alignment: horizontalAlignment, spacing: 2) {
-            HStack(alignment: .lastTextBaseline, spacing: 5) {
-                Text(total)
-                    .font(.system(size: 24, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                Text(title)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: frameAlignment)
-
-            Text("input miss \(miss)")
-            Text("input cache \(cache)")
-            Text("output \(output)")
-        }
-        .font(.caption2.weight(.medium))
-        .foregroundStyle(.secondary)
-        .multilineTextAlignment(textAlignment)
-        .lineLimit(1)
-        .minimumScaleFactor(0.75)
-        .frame(maxWidth: .infinity, alignment: frameAlignment)
-    }
-
-    private func limitRow(_ title: String, _ value: String, _ percent: Double?) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(title)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
-                Spacer()
-                Text(value)
-                    .font(.caption.weight(.semibold))
-                    .monospacedDigit()
-            }
-            usageProgress(percent)
-        }
-    }
-
-    private func normalized(_ percent: Double?) -> Double {
-        min(max((percent ?? 0) / 100, 0), 1)
-    }
-
-    private func usageProgress(_ percent: Double?) -> some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(.tertiary)
-                Capsule()
-                    .fill(tint(for: percent))
-                    .frame(width: geometry.size.width * normalized(percent))
-            }
-        }
-        .frame(height: 6)
-    }
-
-    private func tint(for percent: Double?) -> Color {
-        let value = percent ?? 0
-        if value <= 10 {
-            return .red
-        }
-        if value <= 30 {
-            return .orange
-        }
-        return .green
+        .environment(\.widgetPalette, WidgetPalette(colorScheme: colorScheme))
     }
 }
 
+private struct SmallQuotaWidget: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let summary: CodexUsageSummary
+
+    var body: some View {
+        VStack(spacing: 0) {
+            WidgetHeader(summary: summary, size: .small)
+                .frame(height: 24)
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+
+            SmallQuotaStack(summary: summary)
+                .frame(height: 72)
+                .padding(.horizontal, 14)
+
+            Spacer(minLength: 6)
+
+            Rectangle()
+                .fill(palette.divider)
+                .frame(height: 1)
+                .padding(.horizontal, 14)
+
+            HStack(alignment: .lastTextBaseline, spacing: 8) {
+                Text("Today")
+                    .font(.system(size: 8.6, weight: .medium))
+                    .foregroundStyle(palette.textSecondary)
+                Spacer(minLength: 4)
+                Text(summary.todayTokensText)
+                    .font(.system(size: 15.5, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(palette.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .frame(height: 19)
+            .padding(.horizontal, 14)
+            .padding(.top, 3)
+
+            Spacer(minLength: 0)
+
+            CompactMCOSummary(summary: summary, alignment: .center, fontSize: 8.2)
+                .frame(height: 12)
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct MediumQuotaWidget: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let summary: CodexUsageSummary
+
+    var body: some View {
+        VStack(spacing: 0) {
+            WidgetHeader(summary: summary, size: .regular)
+                .frame(height: 26)
+                .padding(.horizontal, 18)
+                .padding(.top, 12)
+
+            HStack(alignment: .top, spacing: 0) {
+                VStack(spacing: 6) {
+                    QuotaCard(
+                        title: summary.fiveHourLimitLabelText,
+                        value: summary.fiveHourLimitText,
+                        reset: summary.fiveHourResetText,
+                        percent: summary.fiveHourLimitPercent,
+                        tint: .fiveHour
+                    )
+                    QuotaCard(
+                        title: summary.sevenDayLimitLabelText,
+                        value: summary.sevenDayLimitText,
+                        reset: summary.sevenDayResetText,
+                        percent: summary.sevenDayLimitPercent,
+                        tint: .sevenDay
+                    )
+                }
+                .frame(width: 148)
+
+                Rectangle()
+                    .fill(palette.divider)
+                    .frame(width: 1, height: 94)
+                    .padding(.horizontal, 15)
+                    .padding(.top, 2)
+
+                TokenUsagePanel(summary: summary, style: .medium)
+                    .frame(width: 132, height: 102)
+            }
+            .padding(.top, 12)
+            .padding(.horizontal, 14)
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct LargeQuotaWidget: View {
+    let summary: CodexUsageSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            WidgetHeader(summary: summary, size: .regular)
+                .frame(height: 26)
+                .padding(.top, 14)
+
+            Spacer()
+                .frame(height: 21)
+
+            SectionTitle("Quota Overview")
+
+            Spacer()
+                .frame(height: 5)
+
+            HStack(spacing: 8) {
+                QuotaCard(
+                    title: summary.fiveHourLimitLabelText,
+                    value: summary.fiveHourLimitText,
+                    reset: summary.fiveHourResetText,
+                    percent: summary.fiveHourLimitPercent,
+                    tint: .fiveHour
+                )
+                QuotaCard(
+                    title: summary.sevenDayLimitLabelText,
+                    value: summary.sevenDayLimitText,
+                    reset: summary.sevenDayResetText,
+                    percent: summary.sevenDayLimitPercent,
+                    tint: .sevenDay
+                )
+            }
+
+            Spacer()
+                .frame(height: 18)
+
+            SectionTitle("Token Usage")
+
+            Spacer()
+                .frame(height: 9)
+
+            SevenDayUsageChart(summary: summary)
+                .frame(height: 174)
+        }
+        .padding(.horizontal, 18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+private struct WidgetBackground: View {
+    @Environment(\.widgetPalette) private var palette
+    @Environment(\.widgetFamily) private var family
+
+    private var cornerRadius: CGFloat {
+        family == .systemSmall ? 24 : 28
+    }
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(palette.widgetBackground)
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius - 1, style: .continuous)
+                    .fill(palette.mintBrand.opacity(palette.isDark ? 0.018 : 0.045))
+                    .padding(1)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(palette.widgetStroke, lineWidth: 1)
+            }
+    }
+}
+
+private struct WidgetHeader: View {
+    @Environment(\.widgetPalette) private var palette
+
+    enum Size {
+        case small
+        case regular
+    }
+
+    let summary: CodexUsageSummary
+    let size: Size
+
+    var body: some View {
+        HStack(spacing: 0) {
+            AppIdentity(summary: summary, size: size)
+            Spacer(minLength: 10)
+            if size == .regular {
+                Text(summary.isEmpty ? "--" : summary.updatedAtText)
+                    .font(.system(size: 9.5, weight: .regular))
+                    .foregroundStyle(palette.textSecondary)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+        }
+    }
+}
+
+private struct AppIdentity: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let summary: CodexUsageSummary
+    let size: WidgetHeader.Size
+
+    private var iconSize: CGFloat {
+        size == .small ? 18 : 22
+    }
+
+    private var fontSize: CGFloat {
+        size == .small ? 10.4 : 12
+    }
+
+    var body: some View {
+        HStack(spacing: size == .small ? 6 : 8) {
+            QuotaScopeLogo(size: iconSize)
+            (Text(summary.title)
+                .foregroundColor(palette.textPrimary)
+             + Text(" · ")
+                .foregroundColor(palette.textSecondary)
+             + Text(summary.planBadgeText)
+                .foregroundColor(palette.mintBrand))
+                .font(.system(size: fontSize, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+    }
+}
+
+private struct QuotaScopeLogo: View {
+    let size: CGFloat
+
+    var body: some View {
+        logoImage
+            .resizable()
+            .interpolation(.high)
+            .antialiased(true)
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+            .accessibilityHidden(true)
+    }
+
+    private var logoImage: Image {
+        #if WIDGET_PREVIEW_RENDER && os(macOS)
+        if let previewImage = Self.previewLogoImage {
+            return Image(nsImage: previewImage)
+        }
+        #endif
+        return Image("QuotaScopeLogo")
+    }
+
+    #if WIDGET_PREVIEW_RENDER && os(macOS)
+    private static var previewLogoImage: NSImage? {
+        let widgetSource = URL(fileURLWithPath: #filePath)
+        let imageURL = widgetSource
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Assets.xcassets/QuotaScopeLogo.imageset/quotascope-logo@3x.png")
+        return NSImage(contentsOf: imageURL)
+    }
+    #endif
+}
+
+private struct SmallQuotaStack: View {
+    let summary: CodexUsageSummary
+
+    var body: some View {
+        VStack(spacing: 8) {
+            SmallQuotaLine(
+                title: summary.fiveHourLimitLabelText,
+                value: summary.fiveHourLimitText,
+                reset: summary.fiveHourResetText,
+                percent: summary.fiveHourLimitPercent,
+                tint: .fiveHour
+            )
+            SmallQuotaLine(
+                title: summary.sevenDayLimitLabelText,
+                value: summary.sevenDayLimitText,
+                reset: summary.sevenDayResetText,
+                percent: summary.sevenDayLimitPercent,
+                tint: .sevenDay
+            )
+        }
+    }
+}
+
+private struct SmallQuotaLine: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let title: String
+    let value: String
+    let reset: String
+    let percent: Double?
+    let tint: QuotaTint
+
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(alignment: .top, spacing: 6) {
+                Text(title)
+                    .font(.system(size: 8.8, weight: .medium))
+                    .foregroundStyle(palette.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+
+                Spacer(minLength: 4)
+
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text(value)
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(palette.textPrimary)
+                    Text(reset)
+                        .font(.system(size: tint == .fiveHour ? 7.6 : 7.1, weight: .regular))
+                        .monospacedDigit()
+                        .foregroundStyle(palette.textSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                }
+            }
+
+            QuotaProgressBar(percent: percent, tint: tint)
+                .frame(height: 4)
+        }
+        .frame(height: 32)
+    }
+}
+
+private struct QuotaCard: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let title: String
+    let value: String
+    let reset: String
+    let percent: Double?
+    let tint: QuotaTint
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 6) {
+                Text(title)
+                    .font(.system(size: 9.4, weight: .medium))
+                    .foregroundStyle(palette.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+
+                Spacer(minLength: 4)
+
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text(value)
+                        .font(.system(size: 11, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(palette.textPrimary)
+                    Text(reset)
+                        .font(.system(size: tint == .fiveHour ? 8.8 : 8.2, weight: .regular))
+                        .monospacedDigit()
+                        .foregroundStyle(palette.textSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                }
+            }
+
+            Spacer(minLength: 3)
+
+            QuotaProgressBar(percent: percent, tint: tint)
+                .frame(height: 4)
+        }
+        .padding(.horizontal, 10)
+        .padding(.top, 7)
+        .padding(.bottom, 6)
+        .frame(width: 148, height: 45)
+        .background(palette.cardSurface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(palette.cardStroke, lineWidth: 1)
+        }
+    }
+}
+
+private struct QuotaProgressBar: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let percent: Double?
+    let tint: QuotaTint
+
+    private var normalized: Double {
+        min(max((percent ?? 0) / 100, 0), 1)
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(palette.progressTrack)
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(tint.color(in: palette))
+                    .frame(width: geometry.size.width * normalized)
+            }
+        }
+    }
+}
+
+private struct TokenUsagePanel: View {
+    @Environment(\.widgetPalette) private var palette
+
+    enum Style {
+        case medium
+        case largeHeader
+    }
+
+    let summary: CodexUsageSummary
+    let style: Style
+
+    var body: some View {
+        switch style {
+        case .medium:
+            mediumBody
+        case .largeHeader:
+            largeHeaderBody
+        }
+    }
+
+    private var mediumBody: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .lastTextBaseline, spacing: 8) {
+                Text("Today")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(palette.textSecondary)
+                Spacer(minLength: 4)
+                Text(summary.todayTokensText)
+                    .font(.system(size: 18, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(palette.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .frame(height: 21)
+
+            VStack(spacing: 1) {
+                TokenBreakdownRow(kind: .miss, value: summary.todayInputMissText)
+                TokenBreakdownRow(kind: .cache, value: summary.todayInputCacheText)
+                TokenBreakdownRow(kind: .output, value: summary.todayOutputText)
+            }
+            .padding(.top, 8)
+
+            Rectangle()
+                .fill(palette.divider)
+                .frame(height: 1)
+                .padding(.top, 4)
+
+            WeekSummarySubtle(text: summary.weekSummaryText)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.top, 8)
+        }
+    }
+
+    private var largeHeaderBody: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Today")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(palette.textSecondary)
+                .frame(height: 12)
+            Text(summary.todayTokensText)
+                .font(.system(size: 22, weight: .semibold))
+                .monospacedDigit()
+                .foregroundStyle(palette.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .frame(height: 25, alignment: .leading)
+        }
+    }
+}
+
+private struct TokenBreakdownRow: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let kind: TokenBreakdownKind
+    let value: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(kind.color(in: palette))
+                .frame(width: 6, height: 6)
+
+            Text(kind.title)
+                .font(.system(size: 9.7, weight: .regular))
+                .foregroundStyle(palette.textSecondary)
+                .lineLimit(1)
+
+            Spacer(minLength: 4)
+
+            Text(value)
+                .font(.system(size: 9.7, weight: .regular))
+                .monospacedDigit()
+                .foregroundStyle(palette.textSecondary)
+                .lineLimit(1)
+        }
+        .frame(height: 14)
+    }
+}
+
+private struct CompactMCOSummary: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let summary: CodexUsageSummary
+    let alignment: Alignment
+    let fontSize: CGFloat
+
+    var body: some View {
+        mcoText
+            .font(.system(size: fontSize, weight: .regular))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .frame(maxWidth: .infinity, alignment: alignment)
+    }
+
+    private var mcoText: Text {
+        Text("M ")
+            .foregroundColor(palette.mintBrand)
+            .fontWeight(.semibold)
+        + Text(summary.todayInputMissText)
+            .foregroundColor(palette.textSecondary)
+        + Text("   C ")
+            .foregroundColor(palette.inputCache)
+            .fontWeight(.semibold)
+        + Text(summary.todayInputCacheText)
+            .foregroundColor(palette.textSecondary)
+        + Text("   O ")
+            .foregroundColor(palette.outputSilver)
+            .fontWeight(.semibold)
+        + Text(summary.todayOutputText)
+            .foregroundColor(palette.textSecondary)
+    }
+}
+
+private struct WeekSummarySubtle: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 9.6, weight: .regular))
+            .monospacedDigit()
+            .foregroundStyle(palette.textTertiary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+    }
+}
+
+private struct SectionTitle: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let text: String
+
+    init(_ text: String) {
+        self.text = text
+    }
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 9.5, weight: .semibold))
+            .foregroundStyle(palette.textSecondary)
+            .frame(height: 12, alignment: .leading)
+    }
+}
+
+private struct SevenDayUsageChart: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let summary: CodexUsageSummary
+
+    private var bars: [CodexWidgetWeeklyBar] {
+        summary.weeklyBars
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top) {
+                TokenUsagePanel(summary: summary, style: .largeHeader)
+                    .frame(width: 126, alignment: .leading)
+
+                Spacer(minLength: 16)
+
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Week")
+                        .font(.system(size: 8.2, weight: .regular))
+                        .foregroundStyle(palette.textTertiary)
+                    Text(summary.thisWeekTokensText)
+                        .font(.system(size: 10.8, weight: .medium))
+                        .monospacedDigit()
+                        .foregroundStyle(palette.textSecondary.opacity(0.72))
+                }
+                .frame(width: 58, alignment: .trailing)
+            }
+            .padding(.top, 12)
+            .padding(.horizontal, 14)
+
+            CompactMCOSummary(summary: summary, alignment: .leading, fontSize: 8.4)
+                .frame(width: 160, height: 11)
+                .padding(.top, 3)
+                .padding(.horizontal, 14)
+
+            Spacer(minLength: 8)
+
+            ChartBars(bars: bars)
+                .padding(.horizontal, 14)
+                .padding(.bottom, 11)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(palette.cardSurface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(palette.chartStroke, lineWidth: 1)
+        }
+    }
+}
+
+private struct ChartBars: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let bars: [CodexWidgetWeeklyBar]
+
+    private let barWidth: CGFloat = 18
+    private let labelWidth: CGFloat = 34
+    private let maxBarHeight: CGFloat = 64
+
+    var body: some View {
+        VStack(spacing: 3) {
+            ZStack(alignment: .bottom) {
+                VStack(spacing: 0) {
+                    Rectangle()
+                        .fill(palette.chartGuide)
+                        .frame(height: 1)
+                    Spacer()
+                    Rectangle()
+                        .fill(palette.chartBaseline)
+                        .frame(height: 1)
+                }
+                .frame(height: maxBarHeight)
+                .padding(.top, 10)
+
+                HStack(alignment: .bottom, spacing: 5) {
+                    ForEach(Array(bars.enumerated()), id: \.offset) { _, bar in
+                        ChartBar(bar: bar, maxBarHeight: maxBarHeight, columnWidth: labelWidth, barWidth: barWidth)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .frame(height: 74)
+
+            HStack(spacing: 5) {
+                ForEach(Array(bars.enumerated()), id: \.offset) { _, bar in
+                    Text(bar.label)
+                        .font(.system(size: bar.isToday ? 8.7 : 8.3, weight: bar.isToday ? .semibold : .regular))
+                        .foregroundStyle(bar.isToday ? palette.mintBrand : palette.textSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .frame(width: labelWidth)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+private struct ChartBar: View {
+    @Environment(\.widgetPalette) private var palette
+
+    let bar: CodexWidgetWeeklyBar
+    let maxBarHeight: CGFloat
+    let columnWidth: CGFloat
+    let barWidth: CGFloat
+
+    private var barHeight: CGFloat {
+        guard bar.normalizedHeight > 0 else {
+            return 0
+        }
+        return max(4, CGFloat(bar.normalizedHeight) * maxBarHeight)
+    }
+
+    var body: some View {
+        VStack(spacing: 4) {
+            if bar.isToday {
+                Text(bar.valueText)
+                    .font(.system(size: 8.2, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(palette.mintBrand)
+                    .frame(height: 10)
+                    .frame(width: columnWidth)
+            } else {
+                Spacer()
+                    .frame(height: 10)
+            }
+
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(bar.isToday ? palette.mintBrand : palette.lavender7d.opacity(palette.isDark ? 0.55 : 0.50))
+                .frame(width: barWidth, height: barHeight)
+        }
+        .frame(width: columnWidth, height: maxBarHeight + 10, alignment: .bottom)
+    }
+}
+
+private enum QuotaTint {
+    case fiveHour
+    case sevenDay
+
+    func color(in palette: WidgetPalette) -> Color {
+        switch self {
+        case .fiveHour:
+            return palette.mintBrand
+        case .sevenDay:
+            return palette.lavender7d
+        }
+    }
+}
+
+private enum TokenBreakdownKind {
+    case miss
+    case cache
+    case output
+
+    var title: String {
+        switch self {
+        case .miss:
+            return "Input miss"
+        case .cache:
+            return "Input cache"
+        case .output:
+            return "Output"
+        }
+    }
+
+    func color(in palette: WidgetPalette) -> Color {
+        switch self {
+        case .miss:
+            return palette.mintBrand
+        case .cache:
+            return palette.inputCache
+        case .output:
+            return palette.outputSilver
+        }
+    }
+}
+
+private struct WidgetPalette {
+    let colorScheme: ColorScheme
+
+    var isDark: Bool {
+        colorScheme == .dark
+    }
+
+    var widgetBackground: Color {
+        isDark ? Self.hex(0x141A1D) : Self.hex(0xFBFCFA)
+    }
+
+    var widgetStroke: Color {
+        isDark ? Self.hex(0xFFFFFF, opacity: 0.075) : Self.hex(0x0F1715, opacity: 0.09)
+    }
+
+    var cardSurface: Color {
+        isDark ? Self.hex(0x1B2327) : .white
+    }
+
+    var cardStroke: Color {
+        isDark ? Self.hex(0xFFFFFF, opacity: 0.06) : Self.hex(0x0F1715, opacity: 0.08)
+    }
+
+    var chartStroke: Color {
+        isDark ? Self.hex(0x303B3F) : Self.hex(0xE3E8E4)
+    }
+
+    var textPrimary: Color {
+        isDark ? Self.hex(0xF3F8F5) : Self.hex(0x17211E)
+    }
+
+    var textSecondary: Color {
+        isDark ? Self.hex(0x81908A) : Self.hex(0x72807B)
+    }
+
+    var textTertiary: Color {
+        isDark ? Self.hex(0x586864) : Self.hex(0x9FAAA4)
+    }
+
+    var mintBrand: Color {
+        isDark ? Self.hex(0x63D894) : Self.hex(0x2FB979)
+    }
+
+    var lavender7d: Color {
+        isDark ? Self.hex(0xB7A8F6) : Self.hex(0x8B74D7)
+    }
+
+    var inputCache: Color {
+        isDark ? Self.hex(0xA6E9BB) : Self.hex(0x62B580)
+    }
+
+    var outputSilver: Color {
+        isDark ? Self.hex(0xD3DEDB) : Self.hex(0x859691)
+    }
+
+    var divider: Color {
+        isDark ? Self.hex(0xFFFFFF, opacity: 0.08) : Self.hex(0x0F1715, opacity: 0.10)
+    }
+
+    var progressTrack: Color {
+        isDark ? Self.hex(0x303B3F) : Self.hex(0xDCE5DF)
+    }
+
+    var chartGuide: Color {
+        isDark ? Self.hex(0x303B3F, opacity: 0.75) : Self.hex(0xE3E8E4, opacity: 0.90)
+    }
+
+    var chartBaseline: Color {
+        isDark ? Self.hex(0x303B3F, opacity: 0.90) : Self.hex(0xE3E8E4)
+    }
+
+    static func hex(_ value: Int, opacity: Double = 1) -> Color {
+        Color(
+            red: Double((value >> 16) & 0xFF) / 255,
+            green: Double((value >> 8) & 0xFF) / 255,
+            blue: Double(value & 0xFF) / 255,
+            opacity: opacity
+        )
+    }
+}
+
+private struct WidgetPaletteKey: EnvironmentKey {
+    static let defaultValue = WidgetPalette(colorScheme: .light)
+}
+
+private extension EnvironmentValues {
+    var widgetPalette: WidgetPalette {
+        get { self[WidgetPaletteKey.self] }
+        set { self[WidgetPaletteKey.self] = newValue }
+    }
+}
+
+#if !WIDGET_PREVIEW_RENDER
 @main
 struct CodexWatcherWidget: Widget {
-    let kind = "CodexWatcherWidget"
+    let kind = "QuotaScopeWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: CodexUsageProvider()) { entry in
             CodexWatcherWidgetView(entry: entry)
         }
-        .configurationDisplayName("Codex Watcher")
+        .configurationDisplayName("QuotaScope")
         .description("Track local Codex limits and token usage.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         .contentMarginsDisabled()
     }
 }
+
+struct CodexWatcherWidget_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            CodexWatcherWidgetView(entry: CodexUsageProvider.sampleEntry)
+                .previewDisplayName("Small Dark")
+                .previewContext(WidgetPreviewContext(family: .systemSmall))
+                .preferredColorScheme(.dark)
+
+            CodexWatcherWidgetView(entry: CodexUsageProvider.sampleEntry)
+                .previewDisplayName("Small Light")
+                .previewContext(WidgetPreviewContext(family: .systemSmall))
+                .preferredColorScheme(.light)
+
+            CodexWatcherWidgetView(entry: CodexUsageProvider.sampleEntry)
+                .previewDisplayName("Medium Dark")
+                .previewContext(WidgetPreviewContext(family: .systemMedium))
+                .preferredColorScheme(.dark)
+
+            CodexWatcherWidgetView(entry: CodexUsageProvider.sampleEntry)
+                .previewDisplayName("Medium Light")
+                .previewContext(WidgetPreviewContext(family: .systemMedium))
+                .preferredColorScheme(.light)
+
+            CodexWatcherWidgetView(entry: CodexUsageProvider.sampleEntry)
+                .previewDisplayName("Large Dark")
+                .previewContext(WidgetPreviewContext(family: .systemLarge))
+                .preferredColorScheme(.dark)
+
+            CodexWatcherWidgetView(entry: CodexUsageProvider.sampleEntry)
+                .previewDisplayName("Large Light")
+                .previewContext(WidgetPreviewContext(family: .systemLarge))
+                .preferredColorScheme(.light)
+        }
+    }
+}
+#endif

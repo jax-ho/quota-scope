@@ -86,7 +86,7 @@ public struct CodexUsageAPIRateLimitCache: Sendable {
 
     public static func defaultURL() -> URL? {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("CodexWatcher", isDirectory: true)
+            .appendingPathComponent("QuotaScope", isDirectory: true)
             .appendingPathComponent("usage-api-cache.json")
     }
 
@@ -124,7 +124,7 @@ public struct CodexUsageAPIClient: Sendable {
         request.setValue("Bearer \(auth.accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue(auth.accountID, forHTTPHeaderField: "ChatGPT-Account-Id")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("Codex Watcher", forHTTPHeaderField: "User-Agent")
+        request.setValue("QuotaScope", forHTTPHeaderField: "User-Agent")
 
         let (data, response) = try await httpClient.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -179,6 +179,7 @@ public struct CodexUsageAPIClient: Sendable {
             tokensLast7Days: snapshot.tokensLast7Days,
             tokensToday: snapshot.tokensToday,
             tokensThisWeek: snapshot.tokensThisWeek,
+            dailyUsageLast7Days: snapshot.dailyUsageLast7Days,
             eventCount: snapshot.eventCount
         )
     }
@@ -194,6 +195,7 @@ public struct CodexUsageAPIClient: Sendable {
             tokensLast7Days: snapshot.tokensLast7Days,
             tokensToday: snapshot.tokensToday,
             tokensThisWeek: snapshot.tokensThisWeek,
+            dailyUsageLast7Days: snapshot.dailyUsageLast7Days,
             eventCount: snapshot.eventCount
         )
     }

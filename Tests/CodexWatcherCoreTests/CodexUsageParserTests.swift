@@ -95,6 +95,48 @@ final class CodexUsageParserTests: XCTestCase {
         XCTAssertEqual(snapshot.tokensThisWeek.reasoningOutputTokens, 3)
     }
 
+    func testSnapshotBuildsDailyUsageForLastSevenCalendarDays() throws {
+        var calendar = Calendar(identifier: .iso8601)
+        calendar.timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 0))
+        let now = try XCTUnwrap(codexTestDate("2026-05-24T08:00:00.000Z"))
+        let todayMorning = CodexUsageEvent(
+            timestamp: try XCTUnwrap(codexTestDate("2026-05-24T01:00:00.000Z")),
+            lastUsage: TokenUsage(inputTokens: 10, cachedInputTokens: 2, outputTokens: 3, totalTokens: 14)
+        )
+        let todayLater = CodexUsageEvent(
+            timestamp: try XCTUnwrap(codexTestDate("2026-05-24T07:00:00.000Z")),
+            lastUsage: TokenUsage(inputTokens: 20, cachedInputTokens: 4, outputTokens: 6, totalTokens: 28)
+        )
+        let sixDaysAgo = CodexUsageEvent(
+            timestamp: try XCTUnwrap(codexTestDate("2026-05-18T23:00:00.000Z")),
+            lastUsage: TokenUsage(inputTokens: 30, cachedInputTokens: 6, outputTokens: 9, totalTokens: 42)
+        )
+        let sevenDaysAgo = CodexUsageEvent(
+            timestamp: try XCTUnwrap(codexTestDate("2026-05-17T23:59:59.000Z")),
+            lastUsage: TokenUsage(inputTokens: 99, cachedInputTokens: 99, outputTokens: 99, totalTokens: 99)
+        )
+
+        let snapshot = CodexUsageParser.makeSnapshot(
+            events: [sevenDaysAgo, todayMorning, sixDaysAgo, todayLater],
+            now: now,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(snapshot.dailyUsageLast7Days.map(\.date), [
+            try XCTUnwrap(codexTestDate("2026-05-18T00:00:00.000Z")),
+            try XCTUnwrap(codexTestDate("2026-05-19T00:00:00.000Z")),
+            try XCTUnwrap(codexTestDate("2026-05-20T00:00:00.000Z")),
+            try XCTUnwrap(codexTestDate("2026-05-21T00:00:00.000Z")),
+            try XCTUnwrap(codexTestDate("2026-05-22T00:00:00.000Z")),
+            try XCTUnwrap(codexTestDate("2026-05-23T00:00:00.000Z")),
+            try XCTUnwrap(codexTestDate("2026-05-24T00:00:00.000Z"))
+        ])
+        XCTAssertEqual(snapshot.dailyUsageLast7Days.map { $0.usage.totalTokens }, [42, 0, 0, 0, 0, 0, 42])
+        XCTAssertEqual(snapshot.dailyUsageLast7Days.last?.usage.inputTokens, 30)
+        XCTAssertEqual(snapshot.dailyUsageLast7Days.last?.usage.cachedInputTokens, 6)
+        XCTAssertEqual(snapshot.dailyUsageLast7Days.last?.usage.outputTokens, 9)
+    }
+
     func testSnapshotUsesMostConservativeRecentRateLimitAcrossConcurrentSessions() throws {
         let now = try XCTUnwrap(codexTestDate("2026-05-25T04:00:00.000Z"))
         let lowerUsedNewer = CodexUsageEvent(

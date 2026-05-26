@@ -1,6 +1,6 @@
-# Codex Watcher
+# QuotaScope
 
-Codex Watcher is a macOS WidgetKit widget that monitors local Codex usage from
+QuotaScope is a macOS WidgetKit widget that monitors local Codex usage from
 `~/.codex/sessions` and `~/.codex/archived_sessions`.
 
 It shows:
@@ -40,7 +40,7 @@ scripts/install-app.sh
 ```
 
 Then Control-click the desktop wallpaper, choose **Edit Widgets**, search for
-**Codex Watcher**, and drag the widget to the desktop.
+**QuotaScope**, and drag the widget to the desktop.
 
 Run the core parser and formatter tests:
 
