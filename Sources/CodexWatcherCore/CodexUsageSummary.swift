@@ -218,15 +218,15 @@ public enum CodexWidgetLayoutMetrics {
     }
 
     public static var largeEstimatedContentHeight: Double {
-        largeVerticalPadding * 2
+        largeVerticalPadding
             + largeHeaderHeight
-            + 21.0
+            + 14.0
             + largeSectionTitleHeight
             + 5.0
             + largeQuotaCardsHeight
-            + 18.0
+            + 12.0
             + largeSectionTitleHeight
-            + 9.0
+            + 7.0
             + largeChartHeight
     }
 }
