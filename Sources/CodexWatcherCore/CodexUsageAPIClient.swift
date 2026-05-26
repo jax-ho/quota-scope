@@ -172,15 +172,10 @@ public struct CodexUsageAPIClient: Sendable {
             latestEvent = CodexUsageEvent(timestamp: now, rateLimits: apiRateLimits)
         }
 
-        return CodexUsageSnapshot(
+        return Self.snapshot(
+            preservingUsageFrom: snapshot,
             latestEvent: latestEvent,
-            rateLimits: apiRateLimits,
-            tokensLast5Hours: snapshot.tokensLast5Hours,
-            tokensLast7Days: snapshot.tokensLast7Days,
-            tokensToday: snapshot.tokensToday,
-            tokensThisWeek: snapshot.tokensThisWeek,
-            dailyUsageLast7Days: snapshot.dailyUsageLast7Days,
-            eventCount: snapshot.eventCount
+            rateLimits: apiRateLimits
         )
     }
 
@@ -188,9 +183,21 @@ public struct CodexUsageAPIClient: Sendable {
         var latestEvent = snapshot.latestEvent
         latestEvent?.rateLimits = nil
 
+        return Self.snapshot(
+            preservingUsageFrom: snapshot,
+            latestEvent: latestEvent,
+            rateLimits: nil
+        )
+    }
+
+    private static func snapshot(
+        preservingUsageFrom snapshot: CodexUsageSnapshot,
+        latestEvent: CodexUsageEvent?,
+        rateLimits: RateLimits?
+    ) -> CodexUsageSnapshot {
         return CodexUsageSnapshot(
             latestEvent: latestEvent,
-            rateLimits: nil,
+            rateLimits: rateLimits,
             tokensLast5Hours: snapshot.tokensLast5Hours,
             tokensLast7Days: snapshot.tokensLast7Days,
             tokensToday: snapshot.tokensToday,

@@ -74,31 +74,14 @@ public enum CodexUsageLogStore {
                 break
             }
 
-            var segmentStart = chunk.startIndex
-            var cursor = chunk.startIndex
-            while cursor < chunk.endIndex {
-                if chunk[cursor] == newline {
-                    appendLineSegment(
-                        chunk[segmentStart..<cursor],
-                        to: &lineBuffer,
-                        discardingLine: &discardingLine,
-                        tokenPattern: tokenPattern,
-                        maxUsefulPrefixBytes: maxUsefulPrefixBytes
-                    )
-                    appendEventIfNeeded(from: lineBuffer, tokenPattern: tokenPattern, events: &events)
-                    lineBuffer.removeAll(keepingCapacity: true)
-                    discardingLine = false
-                    segmentStart = chunk.index(after: cursor)
-                }
-                cursor = chunk.index(after: cursor)
-            }
-
-            appendLineSegment(
-                chunk[segmentStart..<chunk.endIndex],
+            appendEvents(
+                from: chunk,
+                newline: newline,
                 to: &lineBuffer,
                 discardingLine: &discardingLine,
                 tokenPattern: tokenPattern,
-                maxUsefulPrefixBytes: maxUsefulPrefixBytes
+                maxUsefulPrefixBytes: maxUsefulPrefixBytes,
+                events: &events
             )
         }
 
@@ -111,6 +94,43 @@ public enum CodexUsageLogStore {
             codexHome.appendingPathComponent("sessions"),
             codexHome.appendingPathComponent("archived_sessions")
         ]
+    }
+
+    private static func appendEvents(
+        from chunk: Data,
+        newline: UInt8,
+        to lineBuffer: inout Data,
+        discardingLine: inout Bool,
+        tokenPattern: Data,
+        maxUsefulPrefixBytes: Int,
+        events: inout [CodexUsageEvent]
+    ) {
+        var segmentStart = chunk.startIndex
+        var cursor = chunk.startIndex
+        while cursor < chunk.endIndex {
+            if chunk[cursor] == newline {
+                appendLineSegment(
+                    chunk[segmentStart..<cursor],
+                    to: &lineBuffer,
+                    discardingLine: &discardingLine,
+                    tokenPattern: tokenPattern,
+                    maxUsefulPrefixBytes: maxUsefulPrefixBytes
+                )
+                appendEventIfNeeded(from: lineBuffer, tokenPattern: tokenPattern, events: &events)
+                lineBuffer.removeAll(keepingCapacity: true)
+                discardingLine = false
+                segmentStart = chunk.index(after: cursor)
+            }
+            cursor = chunk.index(after: cursor)
+        }
+
+        appendLineSegment(
+            chunk[segmentStart..<chunk.endIndex],
+            to: &lineBuffer,
+            discardingLine: &discardingLine,
+            tokenPattern: tokenPattern,
+            maxUsefulPrefixBytes: maxUsefulPrefixBytes
+        )
     }
 
     static func defaultCacheURL() -> URL? {

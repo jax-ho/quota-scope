@@ -171,20 +171,8 @@ private struct MediumQuotaWidget: View {
 
             HStack(alignment: .top, spacing: 0) {
                 VStack(spacing: 6) {
-                    QuotaCard(
-                        title: summary.fiveHourLimitLabelText,
-                        value: summary.fiveHourLimitText,
-                        reset: summary.fiveHourResetText,
-                        percent: summary.fiveHourLimitPercent,
-                        tint: .fiveHour
-                    )
-                    QuotaCard(
-                        title: summary.sevenDayLimitLabelText,
-                        value: summary.sevenDayLimitText,
-                        reset: summary.sevenDayResetText,
-                        percent: summary.sevenDayLimitPercent,
-                        tint: .sevenDay
-                    )
+                    QuotaCard(limit: summary.fiveHourQuotaLimit)
+                    QuotaCard(limit: summary.sevenDayQuotaLimit)
                 }
                 .frame(width: 148)
 
@@ -224,20 +212,8 @@ private struct LargeQuotaWidget: View {
                 .frame(height: 5)
 
             HStack(spacing: 8) {
-                QuotaCard(
-                    title: summary.fiveHourLimitLabelText,
-                    value: summary.fiveHourLimitText,
-                    reset: summary.fiveHourResetText,
-                    percent: summary.fiveHourLimitPercent,
-                    tint: .fiveHour
-                )
-                QuotaCard(
-                    title: summary.sevenDayLimitLabelText,
-                    value: summary.sevenDayLimitText,
-                    reset: summary.sevenDayResetText,
-                    percent: summary.sevenDayLimitPercent,
-                    tint: .sevenDay
-                )
+                QuotaCard(limit: summary.fiveHourQuotaLimit)
+                QuotaCard(limit: summary.sevenDayQuotaLimit)
             }
 
             Spacer()
@@ -376,37 +352,51 @@ private struct SmallQuotaStack: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            SmallQuotaLine(
-                title: summary.fiveHourLimitLabelText,
-                value: summary.fiveHourLimitText,
-                reset: summary.fiveHourResetText,
-                percent: summary.fiveHourLimitPercent,
-                tint: .fiveHour
-            )
-            SmallQuotaLine(
-                title: summary.sevenDayLimitLabelText,
-                value: summary.sevenDayLimitText,
-                reset: summary.sevenDayResetText,
-                percent: summary.sevenDayLimitPercent,
-                tint: .sevenDay
-            )
+            SmallQuotaLine(limit: summary.fiveHourQuotaLimit)
+            SmallQuotaLine(limit: summary.sevenDayQuotaLimit)
         }
+    }
+}
+
+private struct QuotaLimitPresentation {
+    let title: String
+    let value: String
+    let reset: String
+    let percent: Double?
+    let tint: QuotaTint
+}
+
+private extension CodexUsageSummary {
+    var fiveHourQuotaLimit: QuotaLimitPresentation {
+        QuotaLimitPresentation(
+            title: fiveHourLimitLabelText,
+            value: fiveHourLimitText,
+            reset: fiveHourResetText,
+            percent: fiveHourLimitPercent,
+            tint: .fiveHour
+        )
+    }
+
+    var sevenDayQuotaLimit: QuotaLimitPresentation {
+        QuotaLimitPresentation(
+            title: sevenDayLimitLabelText,
+            value: sevenDayLimitText,
+            reset: sevenDayResetText,
+            percent: sevenDayLimitPercent,
+            tint: .sevenDay
+        )
     }
 }
 
 private struct SmallQuotaLine: View {
     @Environment(\.widgetPalette) private var palette
 
-    let title: String
-    let value: String
-    let reset: String
-    let percent: Double?
-    let tint: QuotaTint
+    let limit: QuotaLimitPresentation
 
     var body: some View {
         VStack(spacing: 4) {
             HStack(alignment: .top, spacing: 6) {
-                Text(title)
+                Text(limit.title)
                     .font(.system(size: 8.8, weight: .medium))
                     .foregroundStyle(palette.textSecondary)
                     .lineLimit(1)
@@ -415,12 +405,12 @@ private struct SmallQuotaLine: View {
                 Spacer(minLength: 4)
 
                 VStack(alignment: .trailing, spacing: 0) {
-                    Text(value)
+                    Text(limit.value)
                         .font(.system(size: 10.5, weight: .semibold))
                         .monospacedDigit()
                         .foregroundStyle(palette.textPrimary)
-                    Text(reset)
-                        .font(.system(size: tint == .fiveHour ? 7.6 : 7.1, weight: .regular))
+                    Text(limit.reset)
+                        .font(.system(size: limit.tint == .fiveHour ? 7.6 : 7.1, weight: .regular))
                         .monospacedDigit()
                         .foregroundStyle(palette.textSecondary)
                         .lineLimit(1)
@@ -428,7 +418,7 @@ private struct SmallQuotaLine: View {
                 }
             }
 
-            QuotaProgressBar(percent: percent, tint: tint)
+            QuotaProgressBar(percent: limit.percent, tint: limit.tint)
                 .frame(height: 4)
         }
         .frame(height: 32)
@@ -438,16 +428,12 @@ private struct SmallQuotaLine: View {
 private struct QuotaCard: View {
     @Environment(\.widgetPalette) private var palette
 
-    let title: String
-    let value: String
-    let reset: String
-    let percent: Double?
-    let tint: QuotaTint
+    let limit: QuotaLimitPresentation
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 6) {
-                Text(title)
+                Text(limit.title)
                     .font(.system(size: 9.4, weight: .medium))
                     .foregroundStyle(palette.textSecondary)
                     .lineLimit(1)
@@ -456,12 +442,12 @@ private struct QuotaCard: View {
                 Spacer(minLength: 4)
 
                 VStack(alignment: .trailing, spacing: 0) {
-                    Text(value)
+                    Text(limit.value)
                         .font(.system(size: 11, weight: .semibold))
                         .monospacedDigit()
                         .foregroundStyle(palette.textPrimary)
-                    Text(reset)
-                        .font(.system(size: tint == .fiveHour ? 8.8 : 8.2, weight: .regular))
+                    Text(limit.reset)
+                        .font(.system(size: limit.tint == .fiveHour ? 8.8 : 8.2, weight: .regular))
                         .monospacedDigit()
                         .foregroundStyle(palette.textSecondary)
                         .lineLimit(1)
@@ -471,7 +457,7 @@ private struct QuotaCard: View {
 
             Spacer(minLength: 3)
 
-            QuotaProgressBar(percent: percent, tint: tint)
+            QuotaProgressBar(percent: limit.percent, tint: limit.tint)
                 .frame(height: 4)
         }
         .padding(.horizontal, 10)
