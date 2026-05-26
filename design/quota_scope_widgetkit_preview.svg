@@ -1,0 +1,272 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-label="QuotaScope WidgetKit widget designs">
+<defs>
+  <linearGradient id="pageBg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#10151C"/>
+    <stop offset="1" stop-color="#0B0E13"/>
+  </linearGradient>
+  <linearGradient id="materialWash" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity=".055"/>
+    <stop offset=".58" stop-color="#6EA8FF" stop-opacity=".025"/>
+    <stop offset="1" stop-color="#000000" stop-opacity=".08"/>
+  </linearGradient>
+  <filter id="widgetShadow" x="-20%" y="-20%" width="140%" height="150%">
+    <feDropShadow dx="0" dy="18" stdDeviation="15" flood-color="#000000" flood-opacity=".24"/>
+  </filter>
+</defs>
+<rect x="0" y="0" width="960" height="720" rx="0" ry="0" fill="url(#pageBg)"></rect>
+<text x="80" y="48" fill="#F3F6FA" font-size="22" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">QuotaScope WidgetKit Desktop Widgets</text>
+<text x="80" y="70" fill="#7E8A9B" font-size="12" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">small / medium / large information architecture, plus implementation tokens</text>
+<g id="QuotaScope / Widget / Small" filter="url(#widgetShadow)">
+<rect x="80" y="86" width="160" height="160" rx="24" ry="24" fill="#171B21" stroke="rgba(255,255,255,.08)" stroke-width="1"></rect>
+<rect x="81" y="87" width="158" height="158" rx="23" ry="23" fill="url(#materialWash)" opacity="0.48"></rect>
+</g>
+<g id="AppIdentity_TemporaryQuotaScopeIcon" transform="translate(94 98)">
+<rect x="0" y="0" width="22" height="22" rx="5.279999999999999" ry="5.279999999999999" fill="#262D38" stroke="rgba(255,255,255,.12)"></rect>
+<rect x="0" y="0" width="22" height="22" rx="5.279999999999999" ry="5.279999999999999" fill="rgba(110,168,255,.16)"></rect>
+<circle cx="9.57" cy="9.129999999999999" r="4.7299999999999995" fill="none" stroke="#6DD6DD" stroke-width="1.65"></circle>
+<line x1="13.64" y1="13.86" x2="18.04" y2="18.04" stroke="#9AA7FF" stroke-width="1.65" stroke-linecap="round"></line>
+<rect x="4.4" y="15.84" width="11" height="1.3199999999999998" rx="0.6599999999999999" ry="0.6599999999999999" fill="#6EA8FF" opacity="0.8"></rect>
+</g>
+<text x="122" y="111" fill="#F3F6FA" font-size="11" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">QuotaScope</text>
+<text x="122" y="125" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">plan prolite</text>
+<text x="94" y="149" fill="#B8C1CF" font-size="11" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">5h</text>
+<text x="226" y="149" fill="#F3F6FA" font-size="11" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">62%</text>
+<g id="Small_5h_QuotaProgressBar">
+<rect x="94" y="154" width="132" height="5" rx="3" ry="3" fill="#303845"></rect>
+<rect x="94" y="154" width="81.84" height="5" rx="3" ry="3" fill="#6DD6DD"></rect>
+</g>
+<text x="94" y="178" fill="#B8C1CF" font-size="11" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">7d</text>
+<text x="226" y="178" fill="#F3F6FA" font-size="11" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">81%</text>
+<g id="Small_7d_QuotaProgressBar">
+<rect x="94" y="183" width="132" height="5" rx="3" ry="3" fill="#303845"></rect>
+<rect x="94" y="183" width="106.92" height="5" rx="3" ry="3" fill="#9AA7FF"></rect>
+</g>
+<rect x="94" y="197" width="132" height="1" rx="1" ry="1" fill="rgba(255,255,255,.08)"></rect>
+<text x="94" y="216" fill="#7E8A9B" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Today</text>
+<text x="226" y="218" fill="#F3F6FA" font-size="18" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">128.4K</text>
+<text x="160" y="237" fill="#7E8A9B" font-size="8.5" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="middle">M38.2K  C91.6K  O26.4K</text>
+<g id="QuotaScope / Widget / Medium" filter="url(#widgetShadow)">
+<rect x="280" y="86" width="340" height="160" rx="28" ry="28" fill="#171B21" stroke="rgba(255,255,255,.08)" stroke-width="1"></rect>
+<rect x="281" y="87" width="338" height="158" rx="27" ry="27" fill="url(#materialWash)" opacity="0.48"></rect>
+</g>
+<g id="AppIdentity_TemporaryQuotaScopeIcon" transform="translate(296 100)">
+<rect x="0" y="0" width="22" height="22" rx="5.279999999999999" ry="5.279999999999999" fill="#262D38" stroke="rgba(255,255,255,.12)"></rect>
+<rect x="0" y="0" width="22" height="22" rx="5.279999999999999" ry="5.279999999999999" fill="rgba(110,168,255,.16)"></rect>
+<circle cx="9.57" cy="9.129999999999999" r="4.7299999999999995" fill="none" stroke="#6DD6DD" stroke-width="1.65"></circle>
+<line x1="13.64" y1="13.86" x2="18.04" y2="18.04" stroke="#9AA7FF" stroke-width="1.65" stroke-linecap="round"></line>
+<rect x="4.4" y="15.84" width="11" height="1.3199999999999998" rx="0.6599999999999999" ry="0.6599999999999999" fill="#6EA8FF" opacity="0.8"></rect>
+</g>
+<text x="326" y="113" fill="#F3F6FA" font-size="12" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">QuotaScope</text>
+<text x="326" y="126" fill="#7E8A9B" font-size="9.5" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">quota and tokens</text>
+<rect x="528" y="101" width="76" height="18" rx="9" ry="9" fill="rgba(110,168,255,.12)" stroke="rgba(110,168,255,.22)"></rect>
+<text x="566" y="113.5" fill="#6EA8FF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="middle">plan prolite</text>
+<g id="QuotaCard_Medium_5h">
+<rect x="294" y="136" width="148" height="45" rx="10" ry="10" fill="#222833" stroke="rgba(255,255,255,.06)"></rect>
+<text x="304" y="154" fill="#7E8A9B" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">5h limit</text>
+<text x="304" y="167" fill="#F3F6FA" font-size="13" font-weight="600" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">62% remaining</text>
+<text x="432" y="154" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">until 16:20</text>
+<g id="Medium_5h_QuotaProgressBar">
+<rect x="304" y="173" width="128" height="5" rx="3" ry="3" fill="#303845"></rect>
+<rect x="304" y="173" width="79.36" height="5" rx="3" ry="3" fill="#6DD6DD"></rect>
+</g>
+</g>
+<g id="QuotaCard_Medium_7d">
+<rect x="294" y="187" width="148" height="45" rx="10" ry="10" fill="#222833" stroke="rgba(255,255,255,.06)"></rect>
+<text x="304" y="205" fill="#7E8A9B" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">7d limit</text>
+<text x="304" y="218" fill="#F3F6FA" font-size="13" font-weight="600" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">81% remaining</text>
+<text x="432" y="205" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">05/31 15:50</text>
+<g id="Medium_7d_QuotaProgressBar">
+<rect x="304" y="224" width="128" height="5" rx="3" ry="3" fill="#303845"></rect>
+<rect x="304" y="224" width="103.68" height="5" rx="3" ry="3" fill="#9AA7FF"></rect>
+</g>
+</g>
+<rect x="456" y="138" width="1" height="94" rx="1" ry="1" fill="rgba(255,255,255,.08)"></rect>
+<text x="472" y="150" fill="#7E8A9B" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Today</text>
+<text x="604" y="152" fill="#F3F6FA" font-size="18" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">128.4K</text>
+<text x="472" y="173" fill="#7E8A9B" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Week</text>
+<text x="604" y="175" fill="#B8C1CF" font-size="18" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">812.7K</text>
+<rect x="472" y="184" width="132" height="1" rx="1" ry="1" fill="rgba(255,255,255,.08)"></rect>
+<g id="TokenBreakdownRow_Medium_InputMiss">
+<circle cx="475" cy="200" r="3" fill="#78BFFB"></circle>
+<text x="483" y="204" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Input miss</text>
+<text x="604" y="204" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">38.2K</text>
+</g>
+<g id="TokenBreakdownRow_Medium_InputCache">
+<circle cx="475" cy="215" r="3" fill="#84D9AA"></circle>
+<text x="483" y="219" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Input cache</text>
+<text x="604" y="219" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">91.6K</text>
+</g>
+<g id="TokenBreakdownRow_Medium_Output">
+<circle cx="475" cy="230" r="3" fill="#B5A2FF"></circle>
+<text x="483" y="234" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Output</text>
+<text x="604" y="234" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">26.4K</text>
+</g>
+<g id="QuotaScope / Widget / Large" filter="url(#widgetShadow)">
+<rect x="80" y="286" width="340" height="360" rx="28" ry="28" fill="#171B21" stroke="rgba(255,255,255,.08)" stroke-width="1"></rect>
+<rect x="81" y="287" width="338" height="358" rx="27" ry="27" fill="url(#materialWash)" opacity="0.48"></rect>
+</g>
+<g id="AppIdentity_TemporaryQuotaScopeIcon" transform="translate(98 302)">
+<rect x="0" y="0" width="24" height="24" rx="5.76" ry="5.76" fill="#262D38" stroke="rgba(255,255,255,.12)"></rect>
+<rect x="0" y="0" width="24" height="24" rx="5.76" ry="5.76" fill="rgba(110,168,255,.16)"></rect>
+<circle cx="10.44" cy="9.959999999999999" r="5.16" fill="none" stroke="#6DD6DD" stroke-width="1.7999999999999998"></circle>
+<line x1="14.879999999999999" y1="15.120000000000001" x2="19.68" y2="19.68" stroke="#9AA7FF" stroke-width="1.7999999999999998" stroke-linecap="round"></line>
+<rect x="4.800000000000001" y="17.28" width="12" height="1.44" rx="0.72" ry="0.72" fill="#6EA8FF" opacity="0.8"></rect>
+</g>
+<text x="130" y="316" fill="#F3F6FA" font-size="13" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">QuotaScope</text>
+<text x="402" y="316" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">Last updated 12:42</text>
+<rect x="130" y="319" width="82" height="18" rx="9" ry="9" fill="rgba(110,168,255,.12)" stroke="rgba(110,168,255,.22)"></rect>
+<text x="171" y="331.5" fill="#6EA8FF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="middle">plan prolite</text>
+<text x="98" y="359" fill="#7E8A9B" font-size="10" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Quota Overview</text>
+<g id="QuotaCard_Large_5h">
+<rect x="98" y="364" width="146" height="58" rx="10" ry="10" fill="#222833" stroke="rgba(255,255,255,.06)"></rect>
+<text x="108" y="382" fill="#7E8A9B" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">5h limit</text>
+<text x="108" y="398" fill="#F3F6FA" font-size="14" font-weight="600" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">62% remaining</text>
+<text x="234" y="382" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">until 16:20</text>
+<g id="Large_5h_QuotaProgressBar">
+<rect x="108" y="410" width="126" height="5" rx="3" ry="3" fill="#303845"></rect>
+<rect x="108" y="410" width="78.12" height="5" rx="3" ry="3" fill="#6DD6DD"></rect>
+</g>
+</g>
+<g id="QuotaCard_Large_7d">
+<rect x="256" y="364" width="146" height="58" rx="10" ry="10" fill="#222833" stroke="rgba(255,255,255,.06)"></rect>
+<text x="266" y="382" fill="#7E8A9B" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">7d limit</text>
+<text x="266" y="398" fill="#F3F6FA" font-size="14" font-weight="600" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">81% remaining</text>
+<text x="392" y="382" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">05/31 15:50</text>
+<g id="Large_7d_QuotaProgressBar">
+<rect x="266" y="410" width="126" height="5" rx="3" ry="3" fill="#303845"></rect>
+<rect x="266" y="410" width="102.06" height="5" rx="3" ry="3" fill="#9AA7FF"></rect>
+</g>
+</g>
+<text x="98" y="449" fill="#7E8A9B" font-size="10" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Token Usage</text>
+<g id="TokenSummary_Large_Today">
+<rect x="98" y="454" width="146" height="48" rx="11" ry="11" fill="#222833" stroke="rgba(255,255,255,.06)"></rect>
+<text x="108" y="474" fill="#7E8A9B" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Today</text>
+<text x="108" y="493" fill="#F3F6FA" font-size="18" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">128.4K tokens</text>
+</g>
+<g id="TokenSummary_Large_Week">
+<rect x="256" y="454" width="146" height="48" rx="11" ry="11" fill="#222833" stroke="rgba(255,255,255,.06)"></rect>
+<text x="266" y="474" fill="#7E8A9B" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Week</text>
+<text x="266" y="493" fill="#F3F6FA" font-size="18" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">812.7K tokens</text>
+</g>
+<g id="TokenBreakdownCard_Today">
+<rect x="98" y="512" width="146" height="64" rx="11" ry="11" fill="#222833" stroke="rgba(255,255,255,.06)"></rect>
+<text x="108" y="532" fill="#B8C1CF" font-size="10" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Today breakdown</text>
+<g id="TokenBreakdownRow_Today_0">
+<circle cx="111" cy="542" r="3" fill="#78BFFB"></circle>
+<text x="119" y="546" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Input miss</text>
+<text x="234" y="546" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">38.2K</text>
+</g>
+<g id="TokenBreakdownRow_Today_1">
+<circle cx="111" cy="555" r="3" fill="#84D9AA"></circle>
+<text x="119" y="559" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Input cache</text>
+<text x="234" y="559" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">91.6K</text>
+</g>
+<g id="TokenBreakdownRow_Today_2">
+<circle cx="111" cy="568" r="3" fill="#B5A2FF"></circle>
+<text x="119" y="572" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Output</text>
+<text x="234" y="572" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">26.4K</text>
+</g>
+</g>
+<g id="TokenBreakdownCard_Week">
+<rect x="256" y="512" width="146" height="64" rx="11" ry="11" fill="#222833" stroke="rgba(255,255,255,.06)"></rect>
+<text x="266" y="532" fill="#B8C1CF" font-size="10" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Week breakdown</text>
+<g id="TokenBreakdownRow_Week_0">
+<circle cx="269" cy="542" r="3" fill="#78BFFB"></circle>
+<text x="277" y="546" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Input miss</text>
+<text x="392" y="546" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">214.8K</text>
+</g>
+<g id="TokenBreakdownRow_Week_1">
+<circle cx="269" cy="555" r="3" fill="#84D9AA"></circle>
+<text x="277" y="559" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Input cache</text>
+<text x="392" y="559" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">512.3K</text>
+</g>
+<g id="TokenBreakdownRow_Week_2">
+<circle cx="269" cy="568" r="3" fill="#B5A2FF"></circle>
+<text x="277" y="572" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Output</text>
+<text x="392" y="572" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="end">85.6K</text>
+</g>
+</g>
+<text x="98" y="602" fill="#7E8A9B" font-size="10" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">System Status / Future</text>
+<g id="StatusChip_APIConnected">
+<rect x="98" y="608" width="92" height="22" rx="11" ry="11" fill="#222833" stroke="rgba(255,255,255,.07)"></rect>
+<circle cx="110" cy="619" r="3" fill="#74D99F"></circle>
+<text x="118" y="622" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">API Connected</text>
+</g>
+<g id="StatusChip_CacheHealthy">
+<rect x="198" y="608" width="104" height="22" rx="11" ry="11" fill="#222833" stroke="rgba(255,255,255,.07)"></rect>
+<circle cx="210" cy="619" r="3" fill="#74D99F"></circle>
+<text x="218" y="622" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Cache Healthy</text>
+</g>
+<g id="MiniTrendPlaceholder">
+<rect x="312" y="608" width="90" height="22" rx="11" ry="11" fill="#222833" stroke="rgba(255,255,255,.07)"></rect>
+<text x="321" y="622" fill="#7E8A9B" font-size="9.5" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Burn rate</text>
+<line x1="370" y1="622" x2="378" y2="619" stroke="#6DD6DD" stroke-width="1.2" stroke-linecap="round" opacity="0.55"></line>
+<line x1="378" y1="619" x2="386" y2="621" stroke="#6DD6DD" stroke-width="1.2" stroke-linecap="round" opacity="0.55"></line>
+<line x1="386" y1="621" x2="394" y2="616" stroke="#6DD6DD" stroke-width="1.2" stroke-linecap="round" opacity="0.55"></line>
+<line x1="394" y1="616" x2="402" y2="618" stroke="#6DD6DD" stroke-width="1.2" stroke-linecap="round" opacity="0.55"></line>
+<line x1="402" y1="618" x2="410" y2="615" stroke="#6DD6DD" stroke-width="1.2" stroke-linecap="round" opacity="0.55"></line>
+</g>
+<g id="QuotaScope / Design System" filter="url(#widgetShadow)">
+<rect x="460" y="286" width="420" height="360" rx="22" ry="22" fill="#1B2027" stroke="rgba(255,255,255,.08)"></rect>
+<text x="482" y="324" fill="#F3F6FA" font-size="16" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">QuotaScope Widget Design System</text>
+<text x="482" y="342" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">SwiftUI-friendly tokens for WidgetKit desktop widgets</text>
+<text x="482" y="372" fill="#7E8A9B" font-size="10" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Color tokens</text>
+<g id="ColorToken_WidgetBackground">
+<rect x="482" y="384" width="18" height="18" rx="5" ry="5" fill="#171B21" stroke="rgba(255,255,255,.10)"></rect>
+<text x="508" y="397" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">WidgetBackground</text>
+</g>
+<g id="ColorToken_Surface">
+<rect x="482" y="410" width="18" height="18" rx="5" ry="5" fill="#222833" stroke="rgba(255,255,255,.10)"></rect>
+<text x="508" y="423" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Surface</text>
+</g>
+<g id="ColorToken_Brand">
+<rect x="482" y="436" width="18" height="18" rx="5" ry="5" fill="#6EA8FF" stroke="rgba(255,255,255,.10)"></rect>
+<text x="508" y="449" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Brand</text>
+</g>
+<g id="ColorToken_Quota5h">
+<rect x="482" y="462" width="18" height="18" rx="5" ry="5" fill="#6DD6DD" stroke="rgba(255,255,255,.10)"></rect>
+<text x="508" y="475" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Quota5h</text>
+</g>
+<g id="ColorToken_Quota7d">
+<rect x="482" y="488" width="18" height="18" rx="5" ry="5" fill="#9AA7FF" stroke="rgba(255,255,255,.10)"></rect>
+<text x="508" y="501" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Quota7d</text>
+</g>
+<g id="ColorToken_InputMiss">
+<rect x="646" y="384" width="18" height="18" rx="5" ry="5" fill="#78BFFB" stroke="rgba(255,255,255,.10)"></rect>
+<text x="672" y="397" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Input miss</text>
+</g>
+<g id="ColorToken_InputCache">
+<rect x="646" y="410" width="18" height="18" rx="5" ry="5" fill="#84D9AA" stroke="rgba(255,255,255,.10)"></rect>
+<text x="672" y="423" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Input cache</text>
+</g>
+<g id="ColorToken_Output">
+<rect x="646" y="436" width="18" height="18" rx="5" ry="5" fill="#B5A2FF" stroke="rgba(255,255,255,.10)"></rect>
+<text x="672" y="449" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Output</text>
+</g>
+<g id="ColorToken_Success">
+<rect x="646" y="462" width="18" height="18" rx="5" ry="5" fill="#74D99F" stroke="rgba(255,255,255,.10)"></rect>
+<text x="672" y="475" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Success</text>
+</g>
+<g id="ColorToken_Divider">
+<rect x="646" y="488" width="18" height="18" rx="5" ry="5" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.10)"></rect>
+<text x="672" y="501" fill="#B8C1CF" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Divider 8%</text>
+</g>
+<text x="482" y="532" fill="#7E8A9B" font-size="10" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Type scale</text>
+<text x="482" y="556" fill="#F3F6FA" font-size="16" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Title 16 Semibold</text>
+<text x="482" y="586" fill="#F3F6FA" font-size="20" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Metric 20 Semibold</text>
+<text x="482" y="614" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Caption 10 Regular</text>
+<text x="482" y="634" fill="#7E8A9B" font-size="10" font-weight="400" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Use tabular numbers for quota and token values.</text>
+<text x="742" y="532" fill="#7E8A9B" font-size="10" font-weight="700" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">Component styles</text>
+<rect x="742" y="542" width="82" height="18" rx="9" ry="9" fill="rgba(110,168,255,.12)" stroke="rgba(110,168,255,.22)"></rect>
+<text x="783" y="554.5" fill="#6EA8FF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0" text-anchor="middle">plan prolite</text>
+<g id="System_Sample_QuotaProgressBar">
+<rect x="742" y="578" width="120" height="5" rx="3" ry="3" fill="#303845"></rect>
+<rect x="742" y="578" width="74.4" height="5" rx="3" ry="3" fill="#6DD6DD"></rect>
+</g>
+<g id="StatusChip_SampleStatus">
+<rect x="742" y="604" width="118" height="22" rx="11" ry="11" fill="#222833" stroke="rgba(255,255,255,.07)"></rect>
+<circle cx="754" cy="615" r="3" fill="#74D99F"></circle>
+<text x="762" y="618" fill="#B8C1CF" font-size="10" font-weight="500" font-family="-apple-system, BlinkMacSystemFont, &apos;SF Pro Text&apos;, &apos;Inter&apos;, sans-serif" font-variant-numeric="tabular-nums" letter-spacing="0">API Connected</text>
+</g>
+</g>
+</svg>
