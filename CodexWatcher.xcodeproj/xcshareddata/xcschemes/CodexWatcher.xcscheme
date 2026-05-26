@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A00000000000000000000030"
-               BuildableName = "Codex Watcher.app"
-               BlueprintName = "Codex Watcher"
+               BuildableName = "QuotaScope.app"
+               BlueprintName = "QuotaScope"
                ReferencedContainer = "container:CodexWatcher.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -38,8 +38,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A00000000000000000000030"
-            BuildableName = "Codex Watcher.app"
-            BlueprintName = "Codex Watcher"
+            BuildableName = "QuotaScope.app"
+            BlueprintName = "QuotaScope"
             ReferencedContainer = "container:CodexWatcher.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -55,8 +55,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A00000000000000000000030"
-            BuildableName = "Codex Watcher.app"
-            BlueprintName = "Codex Watcher"
+            BuildableName = "QuotaScope.app"
+            BlueprintName = "QuotaScope"
             ReferencedContainer = "container:CodexWatcher.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

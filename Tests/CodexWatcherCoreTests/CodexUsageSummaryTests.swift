@@ -35,11 +35,13 @@ final class CodexUsageSummaryTests: XCTestCase {
             timeZone: TimeZone(secondsFromGMT: 8 * 60 * 60)!
         )
 
-        XCTAssertEqual(summary.title, "Codex Watcher")
+        XCTAssertEqual(summary.title, "QuotaScope")
         XCTAssertEqual(summary.planText, "plus")
-        XCTAssertEqual(summary.planBadgeText, "plan plus")
-        XCTAssertEqual(summary.fiveHourLimitLabelText, "5h until 15:30")
-        XCTAssertEqual(summary.sevenDayLimitLabelText, "7d until 05/31 16:45")
+        XCTAssertEqual(summary.planBadgeText, "plus")
+        XCTAssertEqual(summary.fiveHourLimitLabelText, "5h remaining")
+        XCTAssertEqual(summary.fiveHourResetText, "until 15:30")
+        XCTAssertEqual(summary.sevenDayLimitLabelText, "7d remaining")
+        XCTAssertEqual(summary.sevenDayResetText, "until 05/31 16:45")
         XCTAssertEqual(summary.fiveHourLimitText, "93%")
         XCTAssertEqual(summary.sevenDayLimitText, "80%")
         XCTAssertEqual(summary.fiveHourLimitPercent, 92.6)
@@ -52,7 +54,65 @@ final class CodexUsageSummaryTests: XCTestCase {
         XCTAssertEqual(summary.thisWeekInputMissText, "12.5M")
         XCTAssertEqual(summary.thisWeekInputCacheText, "30.0M")
         XCTAssertEqual(summary.thisWeekOutputText, "5.2M")
+        XCTAssertEqual(summary.weekSummaryText, "Week 47.8M")
         XCTAssertFalse(summary.isEmpty)
+    }
+
+    func testQuotaScopeSampleSummaryMatchesFigmaWidgetContent() throws {
+        let timeZone = try XCTUnwrap(TimeZone(secondsFromGMT: 8 * 60 * 60))
+        let now = try XCTUnwrap(codexTestDate("2026-05-26T04:42:00.000Z"))
+        let snapshot = CodexUsageSnapshot(
+            latestEvent: CodexUsageEvent(
+                timestamp: now,
+                rateLimits: RateLimits(
+                    primary: RateWindow(
+                        usedPercent: 38,
+                        windowMinutes: 300,
+                        resetsAt: try XCTUnwrap(codexTestDate("2026-05-26T08:20:00.000Z"))
+                    ),
+                    secondary: RateWindow(
+                        usedPercent: 19,
+                        windowMinutes: 10_080,
+                        resetsAt: try XCTUnwrap(codexTestDate("2026-05-31T07:50:00.000Z"))
+                    ),
+                    planType: "prolite"
+                )
+            ),
+            tokensToday: TokenUsage(inputTokens: 129_800, cachedInputTokens: 91_600, outputTokens: 26_400, totalTokens: 128_400),
+            tokensThisWeek: TokenUsage(inputTokens: 727_100, cachedInputTokens: 512_300, outputTokens: 85_600, totalTokens: 812_700),
+            dailyUsageLast7Days: [
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-05-20T12:00:00.000Z")), usage: TokenUsage(totalTokens: 90_000)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-05-21T12:00:00.000Z")), usage: TokenUsage(totalTokens: 112_000)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-05-22T12:00:00.000Z")), usage: TokenUsage(totalTokens: 98_000)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-05-23T12:00:00.000Z")), usage: TokenUsage(totalTokens: 128_000)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-05-24T12:00:00.000Z")), usage: TokenUsage(totalTokens: 76_000)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-05-25T12:00:00.000Z")), usage: TokenUsage(totalTokens: 134_000)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-05-26T04:42:00.000Z")), usage: TokenUsage(totalTokens: 128_400))
+            ]
+        )
+
+        let summary = CodexUsageSummary(snapshot: snapshot, now: now, timeZone: timeZone)
+
+        XCTAssertEqual(summary.title, "QuotaScope")
+        XCTAssertEqual(summary.planText, "prolite")
+        XCTAssertEqual(summary.planBadgeText, "prolite")
+        XCTAssertEqual(summary.fiveHourLimitLabelText, "5h remaining")
+        XCTAssertEqual(summary.fiveHourLimitText, "62%")
+        XCTAssertEqual(summary.fiveHourResetText, "until 16:20")
+        XCTAssertEqual(summary.sevenDayLimitLabelText, "7d remaining")
+        XCTAssertEqual(summary.sevenDayLimitText, "81%")
+        XCTAssertEqual(summary.sevenDayResetText, "until 05/31 15:50")
+        XCTAssertEqual(summary.todayTokensText, "128.4K")
+        XCTAssertEqual(summary.todayInputMissText, "38.2K")
+        XCTAssertEqual(summary.todayInputCacheText, "91.6K")
+        XCTAssertEqual(summary.todayOutputText, "26.4K")
+        XCTAssertEqual(summary.thisWeekTokensText, "812.7K")
+        XCTAssertEqual(summary.weekSummaryText, "Week 812.7K")
+        XCTAssertEqual(summary.updatedAtText, "Updated 12:42")
+        XCTAssertEqual(summary.weeklyBars.map(\.label), ["Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Today"])
+        XCTAssertEqual(summary.weeklyBars.last?.valueText, "128K")
+        XCTAssertEqual(summary.weeklyBars.last?.isToday, true)
+        XCTAssertEqual(summary.weeklyBars.map(\.normalizedHeight).max(), 1)
     }
 
     func testEmptySummaryUsesPlaceholders() {
@@ -60,9 +120,11 @@ final class CodexUsageSummaryTests: XCTestCase {
 
         XCTAssertEqual(summary.fiveHourLimitLabelText, "5h remaining")
         XCTAssertEqual(summary.sevenDayLimitLabelText, "7d remaining")
+        XCTAssertEqual(summary.fiveHourResetText, "--")
+        XCTAssertEqual(summary.sevenDayResetText, "--")
         XCTAssertEqual(summary.fiveHourLimitText, "--")
         XCTAssertEqual(summary.sevenDayLimitText, "--")
-        XCTAssertEqual(summary.planBadgeText, "plan --")
+        XCTAssertEqual(summary.planBadgeText, "--")
         XCTAssertEqual(summary.todayTokensText, "--")
         XCTAssertEqual(summary.todayInputMissText, "--")
         XCTAssertEqual(summary.todayInputCacheText, "--")
@@ -71,6 +133,8 @@ final class CodexUsageSummaryTests: XCTestCase {
         XCTAssertEqual(summary.thisWeekInputMissText, "--")
         XCTAssertEqual(summary.thisWeekInputCacheText, "--")
         XCTAssertEqual(summary.thisWeekOutputText, "--")
+        XCTAssertEqual(summary.weekSummaryText, "Week --")
+        XCTAssertEqual(summary.weeklyBars.count, 0)
         XCTAssertTrue(summary.isEmpty)
     }
 }

@@ -36,6 +36,16 @@ public struct TokenUsage: Codable, Equatable, Sendable {
     }
 }
 
+public struct CodexDailyUsage: Codable, Equatable, Sendable {
+    public var date: Date
+    public var usage: TokenUsage
+
+    public init(date: Date, usage: TokenUsage) {
+        self.date = date
+        self.usage = usage
+    }
+}
+
 public struct RateWindow: Codable, Equatable, Sendable {
     public var usedPercent: Double
     public var windowMinutes: Int
@@ -89,6 +99,7 @@ public struct CodexUsageSnapshot: Codable, Equatable, Sendable {
     public var tokensLast7Days: TokenUsage
     public var tokensToday: TokenUsage
     public var tokensThisWeek: TokenUsage
+    public var dailyUsageLast7Days: [CodexDailyUsage]
     public var eventCount: Int
 
     public init(
@@ -98,6 +109,7 @@ public struct CodexUsageSnapshot: Codable, Equatable, Sendable {
         tokensLast7Days: TokenUsage = TokenUsage(),
         tokensToday: TokenUsage = TokenUsage(),
         tokensThisWeek: TokenUsage = TokenUsage(),
+        dailyUsageLast7Days: [CodexDailyUsage] = [],
         eventCount: Int = 0
     ) {
         self.latestEvent = latestEvent
@@ -106,6 +118,7 @@ public struct CodexUsageSnapshot: Codable, Equatable, Sendable {
         self.tokensLast7Days = tokensLast7Days
         self.tokensToday = tokensToday
         self.tokensThisWeek = tokensThisWeek
+        self.dailyUsageLast7Days = dailyUsageLast7Days
         self.eventCount = eventCount
     }
 }
@@ -154,8 +167,36 @@ public enum CodexUsageParser {
             tokensLast7Days: sumLastUsage(events: events, since: sevenDaysAgo),
             tokensToday: sumLastUsage(events: events, since: startOfToday),
             tokensThisWeek: sumLastUsage(events: events, since: startOfWeek),
+            dailyUsageLast7Days: dailyUsageLast7Days(events: events, now: now, calendar: usageCalendar),
             eventCount: events.count
         )
+    }
+
+    private static func dailyUsageLast7Days(
+        events: [CodexUsageEvent],
+        now: Date,
+        calendar: Calendar
+    ) -> [CodexDailyUsage] {
+        let today = calendar.startOfDay(for: now)
+        guard let firstDay = calendar.date(byAdding: .day, value: -6, to: today) else {
+            return []
+        }
+
+        var buckets: [Date: TokenUsage] = [:]
+        for event in events {
+            let day = calendar.startOfDay(for: event.timestamp)
+            guard day >= firstDay, day <= today else {
+                continue
+            }
+            buckets[day, default: TokenUsage()] = buckets[day, default: TokenUsage()] + event.lastUsage
+        }
+
+        return (0..<7).compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: offset, to: firstDay) else {
+                return nil
+            }
+            return CodexDailyUsage(date: day, usage: buckets[day, default: TokenUsage()])
+        }
     }
 
     private static func resolvedRateLimits(events: [CodexUsageEvent], now: Date, fallback: RateLimits?) -> RateLimits? {

@@ -19,6 +19,8 @@
 		A00000000000000000000029 /* CodexWatcherWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A00000000000000000000019 /* CodexWatcherWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A0000000000000000000002A /* CodexUsageAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001B /* CodexUsageAPIClient.swift */; };
 		A0000000000000000000002B /* CodexUsageAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001B /* CodexUsageAPIClient.swift */; };
+		A00000000000000000000050 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000004F /* Assets.xcassets */; };
+		A00000000000000000000051 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000004F /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,7 +58,8 @@
 		A00000000000000000000017 /* CodexUsageSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexUsageSummary.swift; sourceTree = "<group>"; };
 		A0000000000000000000001B /* CodexUsageAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexUsageAPIClient.swift; sourceTree = "<group>"; };
 		A0000000000000000000001A /* CodexWatcherWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CodexWatcherWidget.entitlements; sourceTree = "<group>"; };
-		A00000000000000000000018 /* Codex Watcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Codex Watcher.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0000000000000000000004F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Xcode/Assets.xcassets; sourceTree = "<group>"; };
+		A00000000000000000000018 /* QuotaScope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuotaScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A00000000000000000000019 /* CodexWatcherWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CodexWatcherWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -84,6 +87,7 @@
 				A00000000000000000000004 /* CodexWatcherHost */,
 				A00000000000000000000005 /* CodexWatcherWidget */,
 				A00000000000000000000006 /* CodexWatcherCore */,
+				A0000000000000000000004F /* Assets.xcassets */,
 				A00000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -91,7 +95,7 @@
 		A00000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A00000000000000000000018 /* Codex Watcher.app */,
+				A00000000000000000000018 /* QuotaScope.app */,
 				A00000000000000000000019 /* CodexWatcherWidgetExtension.appex */,
 			);
 			name = Products;
@@ -134,9 +138,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A00000000000000000000030 /* Codex Watcher */ = {
+		A00000000000000000000030 /* QuotaScope */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A00000000000000000000042 /* Build configuration list for PBXNativeTarget "Codex Watcher" */;
+			buildConfigurationList = A00000000000000000000042 /* Build configuration list for PBXNativeTarget "QuotaScope" */;
 			buildPhases = (
 				A00000000000000000000032 /* Sources */,
 				A00000000000000000000036 /* Frameworks */,
@@ -148,9 +152,9 @@
 			dependencies = (
 				A00000000000000000000039 /* PBXTargetDependency */,
 			);
-			name = "Codex Watcher";
-			productName = "Codex Watcher";
-			productReference = A00000000000000000000018 /* Codex Watcher.app */;
+			name = QuotaScope;
+			productName = QuotaScope;
+			productReference = A00000000000000000000018 /* QuotaScope.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A00000000000000000000031 /* CodexWatcherWidgetExtension */ = {
@@ -201,7 +205,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A00000000000000000000030 /* Codex Watcher */,
+				A00000000000000000000030 /* QuotaScope */,
 				A00000000000000000000031 /* CodexWatcherWidgetExtension */,
 			);
 		};
@@ -212,6 +216,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00000000000000000000050 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,6 +224,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A00000000000000000000051 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -381,6 +387,7 @@
 		A00000000000000000000046 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -394,8 +401,8 @@
 					"@executable_path/../PlugIns",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "local.codex-watcher";
-				PRODUCT_NAME = "Codex Watcher";
+				PRODUCT_BUNDLE_IDENTIFIER = local.quotascope;
+				PRODUCT_NAME = QuotaScope;
 				SDKROOT = macosx;
 				SKIP_INSTALL = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -405,6 +412,7 @@
 		A00000000000000000000047 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -418,8 +426,8 @@
 					"@executable_path/../PlugIns",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "local.codex-watcher";
-				PRODUCT_NAME = "Codex Watcher";
+				PRODUCT_BUNDLE_IDENTIFIER = local.quotascope;
+				PRODUCT_NAME = QuotaScope;
 				SDKROOT = macosx;
 				SKIP_INSTALL = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -444,7 +452,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "local.codex-watcher.widget";
+				PRODUCT_BUNDLE_IDENTIFIER = local.quotascope.widget;
 				PRODUCT_NAME = CodexWatcherWidgetExtension;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -470,7 +478,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "local.codex-watcher.widget";
+				PRODUCT_BUNDLE_IDENTIFIER = local.quotascope.widget;
 				PRODUCT_NAME = CodexWatcherWidgetExtension;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -490,7 +498,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A00000000000000000000042 /* Build configuration list for PBXNativeTarget "Codex Watcher" */ = {
+		A00000000000000000000042 /* Build configuration list for PBXNativeTarget "QuotaScope" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A00000000000000000000046 /* Debug */,

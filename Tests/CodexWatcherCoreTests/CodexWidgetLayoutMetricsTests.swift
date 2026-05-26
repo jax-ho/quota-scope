@@ -15,4 +15,11 @@ final class CodexWidgetLayoutMetricsTests: XCTestCase {
             CodexWidgetLayoutMetrics.mediumSystemHeight
         )
     }
+
+    func testLargeWidgetLayoutFitsSystemHeight() {
+        XCTAssertLessThanOrEqual(
+            CodexWidgetLayoutMetrics.largeEstimatedContentHeight,
+            CodexWidgetLayoutMetrics.largeSystemHeight
+        )
+    }
 }

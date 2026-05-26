@@ -115,7 +115,7 @@ public enum CodexUsageLogStore {
 
     static func defaultCacheURL() -> URL? {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("CodexWatcher", isDirectory: true)
+            .appendingPathComponent("QuotaScope", isDirectory: true)
             .appendingPathComponent("usage-log-cache.json")
     }
 
