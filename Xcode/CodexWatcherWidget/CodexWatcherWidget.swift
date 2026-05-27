@@ -74,6 +74,8 @@ struct CodexUsageProvider: TimelineProvider {
 struct CodexWatcherWidgetView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.widgetFamily) private var family
+    @Environment(\.widgetRenderingMode) private var widgetRenderingMode
+    @Environment(\.showsWidgetContainerBackground) private var showsWidgetContainerBackground
 
     let entry: CodexUsageProvider.Entry
     var familyOverride: WidgetFamily?
@@ -86,7 +88,18 @@ struct CodexWatcherWidgetView: View {
         familyOverride ?? family
     }
 
+    private var resolvedPalette: WidgetPalette {
+        WidgetPalette(
+            colorScheme: colorScheme,
+            renderingMode: widgetRenderingMode,
+            showsWidgetContainerBackground: showsWidgetContainerBackground,
+            forceDarkAppearance: renderedFamily == .systemLarge
+        )
+    }
+
     var body: some View {
+        let palette = resolvedPalette
+
         Group {
             switch renderedFamily {
             case .systemSmall:
@@ -97,13 +110,10 @@ struct CodexWatcherWidgetView: View {
                 MediumQuotaWidget(summary: summary)
             }
         }
-        .background {
-            WidgetBackground()
-        }
+        .environment(\.widgetPalette, palette)
         .containerBackground(for: .widget) {
-            WidgetBackground()
+            WidgetBackground(palette: palette, family: renderedFamily)
         }
-        .environment(\.widgetPalette, WidgetPalette(colorScheme: colorScheme))
     }
 }
 
@@ -204,7 +214,7 @@ private struct LargeQuotaWidget: View {
                 .padding(.top, 14)
 
             Spacer()
-                .frame(height: 21)
+                .frame(height: 14)
 
             SectionTitle("Quota Overview")
 
@@ -212,17 +222,17 @@ private struct LargeQuotaWidget: View {
                 .frame(height: 5)
 
             HStack(spacing: 8) {
-                QuotaCard(limit: summary.fiveHourQuotaLimit)
-                QuotaCard(limit: summary.sevenDayQuotaLimit)
+                QuotaCard(limit: summary.fiveHourQuotaLimit, style: .large)
+                QuotaCard(limit: summary.sevenDayQuotaLimit, style: .large)
             }
 
             Spacer()
-                .frame(height: 18)
+                .frame(height: 12)
 
             SectionTitle("Token Usage")
 
             Spacer()
-                .frame(height: 9)
+                .frame(height: 7)
 
             SevenDayUsageChart(summary: summary)
                 .frame(height: 174)
@@ -233,8 +243,8 @@ private struct LargeQuotaWidget: View {
 }
 
 private struct WidgetBackground: View {
-    @Environment(\.widgetPalette) private var palette
-    @Environment(\.widgetFamily) private var family
+    let palette: WidgetPalette
+    let family: WidgetFamily
 
     private var cornerRadius: CGFloat {
         family == .systemSmall ? 24 : 28
@@ -410,7 +420,7 @@ private struct SmallQuotaLine: View {
                         .monospacedDigit()
                         .foregroundStyle(palette.textPrimary)
                     Text(limit.reset)
-                        .font(.system(size: limit.tint == .fiveHour ? 7.6 : 7.1, weight: .regular))
+                        .font(.system(size: 7.6, weight: .regular))
                         .monospacedDigit()
                         .foregroundStyle(palette.textSecondary)
                         .lineLimit(1)
@@ -428,42 +438,112 @@ private struct SmallQuotaLine: View {
 private struct QuotaCard: View {
     @Environment(\.widgetPalette) private var palette
 
+    enum Style {
+        case medium
+        case large
+
+        var size: CGSize {
+            switch self {
+            case .medium:
+                return CGSize(width: 148, height: 45)
+            case .large:
+                return CGSize(width: 148, height: 45)
+            }
+        }
+
+        var titleFontSize: CGFloat {
+            switch self {
+            case .medium:
+                return 9.4
+            case .large:
+                return 9.4
+            }
+        }
+
+        var valueFontSize: CGFloat {
+            switch self {
+            case .medium:
+                return 11
+            case .large:
+                return 11
+            }
+        }
+
+        var resetFontSize: CGFloat {
+            switch self {
+            case .medium:
+                return 8.8
+            case .large:
+                return 8.8
+            }
+        }
+
+        var progressHeight: CGFloat {
+            switch self {
+            case .medium:
+                return 4
+            case .large:
+                return 4
+            }
+        }
+
+        var topPadding: CGFloat {
+            switch self {
+            case .medium:
+                return 7
+            case .large:
+                return 7
+            }
+        }
+
+        var bottomPadding: CGFloat {
+            switch self {
+            case .medium:
+                return 6
+            case .large:
+                return 6
+            }
+        }
+    }
+
     let limit: QuotaLimitPresentation
+    var style: Style = .medium
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(limit.title)
-                    .font(.system(size: 9.4, weight: .medium))
+                    .font(.system(size: style.titleFontSize, weight: .medium))
                     .foregroundStyle(palette.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
 
                 Spacer(minLength: 4)
 
-                VStack(alignment: .trailing, spacing: 0) {
-                    Text(limit.value)
-                        .font(.system(size: 11, weight: .semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(palette.textPrimary)
-                    Text(limit.reset)
-                        .font(.system(size: limit.tint == .fiveHour ? 8.8 : 8.2, weight: .regular))
-                        .monospacedDigit()
-                        .foregroundStyle(palette.textSecondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.72)
-                }
+                Text(limit.value)
+                    .font(.system(size: style.valueFontSize, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(palette.textPrimary)
             }
+
+            Text(limit.reset)
+                .font(.system(size: style.resetFontSize, weight: .regular))
+                .monospacedDigit()
+                .foregroundStyle(palette.textSecondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+                .allowsTightening(true)
+                .frame(maxWidth: .infinity, alignment: .trailing)
 
             Spacer(minLength: 3)
 
             QuotaProgressBar(percent: limit.percent, tint: limit.tint)
-                .frame(height: 4)
+                .frame(height: style.progressHeight)
         }
         .padding(.horizontal, 10)
-        .padding(.top, 7)
-        .padding(.bottom, 6)
-        .frame(width: 148, height: 45)
+        .padding(.top, style.topPadding)
+        .padding(.bottom, style.bottomPadding)
+        .frame(width: style.size.width, height: style.size.height)
         .background(palette.cardSurface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -490,6 +570,7 @@ private struct QuotaProgressBar: View {
                 RoundedRectangle(cornerRadius: 2, style: .continuous)
                     .fill(tint.color(in: palette))
                     .frame(width: geometry.size.width * normalized)
+                    .widgetAccentable()
             }
         }
     }
@@ -577,6 +658,7 @@ private struct TokenBreakdownRow: View {
             Circle()
                 .fill(kind.color(in: palette))
                 .frame(width: 6, height: 6)
+                .widgetAccentable()
 
             Text(kind.title)
                 .font(.system(size: 9.7, weight: .regular))
@@ -690,19 +772,19 @@ private struct SevenDayUsageChart: View {
                 }
                 .frame(width: 58, alignment: .trailing)
             }
-            .padding(.top, 12)
+            .padding(.top, 10)
             .padding(.horizontal, 14)
 
             CompactMCOSummary(summary: summary, alignment: .leading, fontSize: 8.4)
                 .frame(width: 160, height: 11)
-                .padding(.top, 3)
+                .padding(.top, 2)
                 .padding(.horizontal, 14)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 2)
 
             ChartBars(bars: bars)
                 .padding(.horizontal, 14)
-                .padding(.bottom, 11)
+                .padding(.bottom, 20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(palette.cardSurface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -785,6 +867,7 @@ private struct ChartBar: View {
                     .foregroundStyle(palette.mintBrand)
                     .frame(height: 10)
                     .frame(width: columnWidth)
+                    .widgetAccentable()
             } else {
                 Spacer()
                     .frame(height: 10)
@@ -793,6 +876,7 @@ private struct ChartBar: View {
             RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .fill(bar.isToday ? palette.mintBrand : palette.lavender7d.opacity(palette.isDark ? 0.55 : 0.50))
                 .frame(width: barWidth, height: barHeight)
+                .widgetAccentable(bar.isToday)
         }
         .frame(width: columnWidth, height: maxBarHeight + 10, alignment: .bottom)
     }
@@ -842,73 +926,135 @@ private enum TokenBreakdownKind {
 
 private struct WidgetPalette {
     let colorScheme: ColorScheme
+    private let usesDesktopTintedRendering: Bool
+
+    init(
+        colorScheme: ColorScheme,
+        renderingMode: WidgetRenderingMode,
+        showsWidgetContainerBackground: Bool,
+        forceDarkAppearance: Bool = false
+    ) {
+        let resolvedColorScheme = forceDarkAppearance ? ColorScheme.dark : colorScheme
+        self.colorScheme = resolvedColorScheme
+        usesDesktopTintedRendering = !showsWidgetContainerBackground
+            || renderingMode == .accented
+            || renderingMode == .vibrant
+    }
 
     var isDark: Bool {
         colorScheme == .dark
     }
 
     var widgetBackground: Color {
-        isDark ? Self.hex(0x141A1D) : Self.hex(0xFBFCFA)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0x171B21, opacity: 0.82) : Self.hex(0xF7FAF8, opacity: 0.72)
+        }
+        return isDark ? Self.hex(0x171B21) : Self.hex(0xFBFCFA)
     }
 
     var widgetStroke: Color {
-        isDark ? Self.hex(0xFFFFFF, opacity: 0.075) : Self.hex(0x0F1715, opacity: 0.09)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xFFFFFF, opacity: 0.10) : Self.hex(0x0F1715, opacity: 0.10)
+        }
+        return isDark ? Self.hex(0xFFFFFF, opacity: 0.075) : Self.hex(0x0F1715, opacity: 0.09)
     }
 
     var cardSurface: Color {
-        isDark ? Self.hex(0x1B2327) : .white
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0x1B2327, opacity: 0.88) : Self.hex(0xFFFFFF, opacity: 0.62)
+        }
+        return isDark ? Self.hex(0x1B2327) : .white
     }
 
     var cardStroke: Color {
-        isDark ? Self.hex(0xFFFFFF, opacity: 0.06) : Self.hex(0x0F1715, opacity: 0.08)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xFFFFFF, opacity: 0.08) : Self.hex(0x0F1715, opacity: 0.10)
+        }
+        return isDark ? Self.hex(0xFFFFFF, opacity: 0.06) : Self.hex(0x0F1715, opacity: 0.08)
     }
 
     var chartStroke: Color {
-        isDark ? Self.hex(0x303B3F) : Self.hex(0xE3E8E4)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xFFFFFF, opacity: 0.10) : Self.hex(0x0F1715, opacity: 0.10)
+        }
+        return isDark ? Self.hex(0x303B3F) : Self.hex(0xE3E8E4)
     }
 
     var textPrimary: Color {
-        isDark ? Self.hex(0xF3F8F5) : Self.hex(0x17211E)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xF3F8F5, opacity: 0.96) : Self.hex(0x111917, opacity: 0.94)
+        }
+        return isDark ? Self.hex(0xF3F8F5) : Self.hex(0x17211E)
     }
 
     var textSecondary: Color {
-        isDark ? Self.hex(0x81908A) : Self.hex(0x72807B)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0x93A09A, opacity: 0.92) : Self.hex(0x4F5C56, opacity: 0.92)
+        }
+        return isDark ? Self.hex(0x81908A) : Self.hex(0x72807B)
     }
 
     var textTertiary: Color {
-        isDark ? Self.hex(0x586864) : Self.hex(0x9FAAA4)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0x70807A, opacity: 0.88) : Self.hex(0x6F7B75, opacity: 0.86)
+        }
+        return isDark ? Self.hex(0x586864) : Self.hex(0x9FAAA4)
     }
 
     var mintBrand: Color {
-        isDark ? Self.hex(0x63D894) : Self.hex(0x2FB979)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0x63D894) : Self.hex(0x20B66F)
+        }
+        return isDark ? Self.hex(0x63D894) : Self.hex(0x2FB979)
     }
 
     var lavender7d: Color {
-        isDark ? Self.hex(0xB7A8F6) : Self.hex(0x8B74D7)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xB7A8F6) : Self.hex(0x7B62CF)
+        }
+        return isDark ? Self.hex(0xB7A8F6) : Self.hex(0x8B74D7)
     }
 
     var inputCache: Color {
-        isDark ? Self.hex(0xA6E9BB) : Self.hex(0x62B580)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xA6E9BB) : Self.hex(0x59B87C)
+        }
+        return isDark ? Self.hex(0xA6E9BB) : Self.hex(0x62B580)
     }
 
     var outputSilver: Color {
-        isDark ? Self.hex(0xD3DEDB) : Self.hex(0x859691)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xD3DEDB) : Self.hex(0x7C8A84)
+        }
+        return isDark ? Self.hex(0xD3DEDB) : Self.hex(0x859691)
     }
 
     var divider: Color {
-        isDark ? Self.hex(0xFFFFFF, opacity: 0.08) : Self.hex(0x0F1715, opacity: 0.10)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xFFFFFF, opacity: 0.09) : Self.hex(0x0F1715, opacity: 0.12)
+        }
+        return isDark ? Self.hex(0xFFFFFF, opacity: 0.08) : Self.hex(0x0F1715, opacity: 0.10)
     }
 
     var progressTrack: Color {
-        isDark ? Self.hex(0x303B3F) : Self.hex(0xDCE5DF)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0x303B3F, opacity: 0.86) : Self.hex(0x0F1715, opacity: 0.12)
+        }
+        return isDark ? Self.hex(0x303B3F) : Self.hex(0xDCE5DF)
     }
 
     var chartGuide: Color {
-        isDark ? Self.hex(0x303B3F, opacity: 0.75) : Self.hex(0xE3E8E4, opacity: 0.90)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xFFFFFF, opacity: 0.08) : Self.hex(0x0F1715, opacity: 0.11)
+        }
+        return isDark ? Self.hex(0x303B3F, opacity: 0.75) : Self.hex(0xE3E8E4, opacity: 0.90)
     }
 
     var chartBaseline: Color {
-        isDark ? Self.hex(0x303B3F, opacity: 0.90) : Self.hex(0xE3E8E4)
+        if usesDesktopTintedRendering {
+            return isDark ? Self.hex(0xFFFFFF, opacity: 0.09) : Self.hex(0x0F1715, opacity: 0.13)
+        }
+        return isDark ? Self.hex(0x303B3F, opacity: 0.90) : Self.hex(0xE3E8E4)
     }
 
     static func hex(_ value: Int, opacity: Double = 1) -> Color {
@@ -922,7 +1068,11 @@ private struct WidgetPalette {
 }
 
 private struct WidgetPaletteKey: EnvironmentKey {
-    static let defaultValue = WidgetPalette(colorScheme: .light)
+    static let defaultValue = WidgetPalette(
+        colorScheme: .light,
+        renderingMode: .fullColor,
+        showsWidgetContainerBackground: true
+    )
 }
 
 private extension EnvironmentValues {
@@ -945,6 +1095,7 @@ struct CodexWatcherWidget: Widget {
         .description("Track local Codex limits and token usage.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         .contentMarginsDisabled()
+        .containerBackgroundRemovable(false)
     }
 }
 
