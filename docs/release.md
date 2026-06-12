@@ -118,6 +118,67 @@ GitHub Releases. In signed mode, it also signs the WidgetKit extension and host
 app, submits the DMG with `xcrun notarytool`, and staples the notarization
 ticket before upload.
 
+## AI Release Runbook
+
+Use this checklist when asking an AI agent to publish the next unsigned GitHub
+Release.
+
+1. Confirm the checkout is on `main` and clean:
+
+```sh
+git switch main
+git pull --ff-only origin main
+git status --short --branch
+```
+
+2. Choose the next version tag. Use semantic versions like `v1.0.1`; do not
+   reuse an existing tag:
+
+```sh
+git tag --list 'v*'
+```
+
+3. Run the local release checks:
+
+```sh
+scripts/test-release-channel.sh
+swift test
+scripts/package-release.sh \
+  --dry-run \
+  --version 1.0.1 \
+  --build-number 101 \
+  --export-unsigned \
+  --skip-notarization
+```
+
+4. Push the tag to trigger the GitHub Release workflow:
+
+```sh
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+5. Watch the `Release` workflow on GitHub. A normal unsigned run skips
+   `Import Developer ID certificate`, then completes `Package release` and
+   `Publish GitHub Release`.
+
+6. Verify the created release page contains:
+
+- `QuotaScope-<version>.dmg`
+- `SHA256SUMS`
+- release notes saying `Distribution: unsigned`
+
+7. If the release workflow fails, inspect the failed GitHub Actions job logs,
+   fix the branch on `main`, delete the failed tag locally and remotely, then
+   recreate the tag at the fixed commit:
+
+```sh
+git tag -d v1.0.1
+git push origin :refs/tags/v1.0.1
+git tag v1.0.1
+git push origin v1.0.1
+```
+
 ## Verification
 
 Before publishing, run:
