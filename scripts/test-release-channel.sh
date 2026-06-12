@@ -66,6 +66,7 @@ dry_run_output="$("$ROOT_DIR/scripts/package-release.sh" --dry-run --version 9.9
 [[ "$dry_run_output" == *"QuotaScope-9.9.9"* ]] || fail "dry-run should show versioned artifact names"
 [[ "$dry_run_output" == *"notarization: skipped"* ]] || fail "dry-run should show notarization skip"
 [[ "$dry_run_output" == *"export mode: unsigned"* ]] || fail "dry-run should show unsigned export mode"
+[[ "$dry_run_output" == *"ad-hoc sign embedded WidgetKit extension and host app"* ]] || fail "unsigned dry-run should still sign app bundles ad-hoc"
 
 signed_dry_run_output="$("$ROOT_DIR/scripts/package-release.sh" --dry-run --version 9.9.9 --build-number 999)"
 [[ "$signed_dry_run_output" == *"export mode: Developer ID signed"* ]] || fail "signed dry-run should show Developer ID export mode"
@@ -110,6 +111,7 @@ assert_contains ".github/workflows/release.yml" "SHA256SUMS"
 
 assert_contains "docs/release.md" "GitHub Releases"
 assert_contains "docs/release.md" "Unsigned Release"
+assert_contains "docs/release.md" "ad-hoc signed"
 assert_contains "docs/release.md" "Developer ID Release"
 assert_contains "docs/release.md" "AI Release Runbook"
 assert_contains "docs/release.md" "git push origin v1\\.0\\.1"
@@ -123,5 +125,6 @@ assert_contains "AGENTS.md" "docs/release\\.md"
 assert_contains "AGENTS.md" "AI Release Runbook"
 assert_contains "AGENTS.md" "scripts/test-release-channel\\.sh"
 assert_contains "AGENTS.md" "unsigned GitHub Releases"
+assert_contains "AGENTS.md" "ad-hoc signed"
 
 echo "release-channel tests passed"

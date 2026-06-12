@@ -2,9 +2,10 @@
 
 ## Release Workflow
 
-QuotaScope publishes unsigned GitHub Releases by default. Before changing or
-running the release flow, read `docs/release.md`, especially the
-`AI Release Runbook` section.
+QuotaScope publishes unsigned GitHub Releases by default. The app inside the
+free unsigned DMG must still be ad-hoc signed so macOS can validate the host app
+and WidgetKit extension bundles. Before changing or running the release flow,
+read `docs/release.md`, especially the `AI Release Runbook` section.
 
 For release-related edits, keep these checks green:
 

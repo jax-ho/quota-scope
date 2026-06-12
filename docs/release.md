@@ -1,9 +1,11 @@
 # QuotaScope Release Guide
 
 QuotaScope is distributed outside the Mac App Store through GitHub Releases.
-By default, releases are unsigned DMGs so the project can ship without a paid
-Apple Developer Program membership. A future Developer ID signed and notarized
-release path is still available when Apple credentials are configured.
+By default, releases are unsigned DMGs containing an ad-hoc signed app, so the
+project can ship without a paid Apple Developer Program membership while still
+letting macOS validate the app bundle and WidgetKit extension structure. A
+future Developer ID signed and notarized release path is still available when
+Apple credentials are configured.
 
 ## Prerequisites
 
@@ -32,9 +34,9 @@ scripts/package-release.sh \
   --skip-notarization
 ```
 
-Unsigned releases are not notarized. Users who download them from the internet
-may need to Control-click the app and choose Open, or approve the app in macOS
-Privacy & Security settings.
+Unsigned releases are ad-hoc signed but not Developer ID signed or notarized.
+Users who download them from the internet may need to Control-click the app and
+choose Open, or approve the app in macOS Privacy & Security settings.
 
 ## Developer ID Release
 
@@ -112,11 +114,11 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-In unsigned mode, the workflow builds the Release app, skips signing and
-notarization, creates the DMG, writes `SHA256SUMS`, and uploads both files to
-GitHub Releases. In signed mode, it also signs the WidgetKit extension and host
-app, submits the DMG with `xcrun notarytool`, and staples the notarization
-ticket before upload.
+In unsigned mode, the workflow builds the Release app, ad-hoc signs the
+WidgetKit extension and host app, skips notarization, creates the DMG, writes
+`SHA256SUMS`, and uploads both files to GitHub Releases. In signed mode, it uses
+Developer ID signing, submits the DMG with `xcrun notarytool`, and staples the
+notarization ticket before upload.
 
 ## AI Release Runbook
 
@@ -166,7 +168,7 @@ git push origin v1.0.1
 
 - `QuotaScope-<version>.dmg`
 - `SHA256SUMS`
-- release notes saying `Distribution: unsigned`
+- release notes saying `Distribution: unsigned DMG with an ad-hoc signed app`
 
 7. If the release workflow fails, inspect the failed GitHub Actions job logs,
    fix the branch on `main`, delete the failed tag locally and remotely, then
@@ -204,11 +206,15 @@ After downloading a release:
 
 ```sh
 shasum -a 256 -c SHA256SUMS
-spctl -a -vv -t open --context context:primary-signature QuotaScope-1.0.0.dmg
 ```
 
 Then mount the DMG, copy `QuotaScope.app` to Applications, open it once, and
-confirm the QuotaScope widget appears in macOS Edit Widgets.
+confirm the QuotaScope widget appears in macOS Edit Widgets. For signed
+Developer ID releases, also check Gatekeeper:
+
+```sh
+spctl -a -vv -t open --context context:primary-signature QuotaScope-1.0.0.dmg
+```
 
 ## Troubleshooting
 

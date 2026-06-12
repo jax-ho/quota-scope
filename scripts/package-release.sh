@@ -36,7 +36,7 @@ Options:
   --app-password PASSWORD   App-specific password for notarytool. Can also use APPLE_APP_SPECIFIC_PASSWORD.
   --keychain-profile NAME   notarytool keychain profile. Can also use NOTARY_KEYCHAIN_PROFILE.
   --skip-notarization       Build and sign the DMG without submitting it to Apple.
-  --export-unsigned         Build an unsigned DMG for local smoke testing. Not for distribution.
+  --export-unsigned         Build a free unsigned DMG with an ad-hoc signed app.
   --dry-run                 Print resolved settings and planned steps without building.
   --help                    Show this help.
 
@@ -211,7 +211,7 @@ release dry-run:
   steps:
     - validate release inputs
     - build Release app with xcodebuild
-    - $([[ "$EXPORT_UNSIGNED" -eq 1 ]] && printf 'skip code signing for unsigned local export' || printf 'sign embedded WidgetKit extension and host app')
+    - $([[ "$EXPORT_UNSIGNED" -eq 1 ]] && printf 'ad-hoc sign embedded WidgetKit extension and host app' || printf 'Developer ID sign embedded WidgetKit extension and host app')
     - create compressed DMG with /Applications shortcut
     - submit DMG with xcrun notarytool unless skipped
     - staple notarization ticket unless skipped
@@ -242,29 +242,40 @@ build_app() {
 }
 
 sign_app() {
-  if [[ "$EXPORT_UNSIGNED" -eq 1 ]]; then
-    log "Skipping code signing for unsigned local export"
-    return
-  fi
-
-  log "Signing embedded app extension"
   local appex="$SIGNED_APP_DIR/Contents/PlugIns/CodexWatcherWidgetExtension.appex"
   [[ -d "$appex" ]] || die "expected widget extension at $appex"
-  codesign \
-    --force \
-    --timestamp \
-    --options runtime \
-    --entitlements "$ROOT_DIR/Xcode/CodexWatcherWidget/CodexWatcherWidget.entitlements" \
-    --sign "$SIGNING_IDENTITY" \
-    "$appex"
 
-  log "Signing host app"
-  codesign \
-    --force \
-    --timestamp \
-    --options runtime \
-    --sign "$SIGNING_IDENTITY" \
-    "$SIGNED_APP_DIR"
+  if [[ "$EXPORT_UNSIGNED" -eq 1 ]]; then
+    log "Ad-hoc signing embedded app extension for unsigned export"
+    codesign \
+      --force \
+      --sign - \
+      --entitlements "$ROOT_DIR/Xcode/CodexWatcherWidget/CodexWatcherWidget.entitlements" \
+      "$appex"
+
+    log "Ad-hoc signing host app for unsigned export"
+    codesign \
+      --force \
+      --sign - \
+      "$SIGNED_APP_DIR"
+  else
+    log "Signing embedded app extension"
+    codesign \
+      --force \
+      --timestamp \
+      --options runtime \
+      --entitlements "$ROOT_DIR/Xcode/CodexWatcherWidget/CodexWatcherWidget.entitlements" \
+      --sign "$SIGNING_IDENTITY" \
+      "$appex"
+
+    log "Signing host app"
+    codesign \
+      --force \
+      --timestamp \
+      --options runtime \
+      --sign "$SIGNING_IDENTITY" \
+      "$SIGNED_APP_DIR"
+  fi
 
   log "Verifying app signature"
   codesign --verify --deep --strict --verbose=2 "$SIGNED_APP_DIR"
@@ -329,7 +340,7 @@ write_release_files() {
 
   local distribution_note
   if [[ "$EXPORT_UNSIGNED" -eq 1 ]]; then
-    distribution_note="Distribution: unsigned. macOS may ask internet downloaders to Control-click and choose Open."
+    distribution_note="Distribution: unsigned DMG with an ad-hoc signed app. macOS may ask internet downloaders to Control-click and choose Open."
   else
     distribution_note="Distribution: Developer ID signed and notarized."
   fi
