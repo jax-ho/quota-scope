@@ -101,4 +101,39 @@ final class CodexUsageAPIClientTests: XCTestCase {
         XCTAssertEqual(snapshot.tokensToday.totalTokens, 1_000_000)
         XCTAssertEqual(CodexUsageSummary(snapshot: snapshot, now: now).fiveHourLimitText, "--")
     }
+
+    func testLoadSnapshotFallsBackToLocalLogLimitsWhenAPIFetchFails() async throws {
+        let now = try XCTUnwrap(codexTestDate("2026-05-25T04:20:00.000Z"))
+        let missingCodexHome = FileManager.default.temporaryDirectory
+            .appendingPathComponent("CodexWatcherTests-missing-auth-\(UUID().uuidString)")
+        let localRateLimits = RateLimits(
+            primary: RateWindow(usedPercent: 72, windowMinutes: 300),
+            secondary: RateWindow(usedPercent: 28, windowMinutes: 10_080),
+            planType: "prolite"
+        )
+        let localSnapshot = CodexUsageSnapshot(
+            latestEvent: CodexUsageEvent(
+                timestamp: now.addingTimeInterval(-60),
+                rateLimits: localRateLimits
+            ),
+            rateLimits: localRateLimits,
+            tokensToday: TokenUsage(totalTokens: 1_000_000),
+            eventCount: 1
+        )
+        let client = CodexUsageAPIClient(
+            authStore: CodexAuthStore(codexHome: missingCodexHome),
+            cache: CodexUsageAPIRateLimitCache(url: nil)
+        )
+
+        let snapshot = await client.loadSnapshot(localSnapshot: localSnapshot, now: now)
+
+        XCTAssertEqual(snapshot.rateLimits, localRateLimits)
+        XCTAssertEqual(snapshot.latestEvent?.rateLimits, localRateLimits)
+        XCTAssertEqual(snapshot.tokensToday.totalTokens, 1_000_000)
+
+        let summary = CodexUsageSummary(snapshot: snapshot, now: now)
+        XCTAssertEqual(summary.planText, "prolite")
+        XCTAssertEqual(summary.fiveHourLimitText, "28%")
+        XCTAssertEqual(summary.sevenDayLimitText, "72%")
+    }
 }

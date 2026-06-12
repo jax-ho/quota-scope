@@ -154,7 +154,7 @@ public struct CodexUsageAPIClient: Sendable {
             if let cachedRateLimits = cache.load(now: now) {
                 return Self.apply(apiRateLimits: cachedRateLimits, to: localSnapshot, now: now)
             }
-            return Self.removingLocalRateLimits(from: localSnapshot)
+            return localSnapshot
         }
     }
 
