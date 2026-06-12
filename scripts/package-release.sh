@@ -327,6 +327,13 @@ write_release_files() {
     shasum -a 256 "$(basename "$DMG_PATH")" > "$CHECKSUM_PATH"
   )
 
+  local distribution_note
+  if [[ "$EXPORT_UNSIGNED" -eq 1 ]]; then
+    distribution_note="Distribution: unsigned. macOS may ask internet downloaders to Control-click and choose Open."
+  else
+    distribution_note="Distribution: Developer ID signed and notarized."
+  fi
+
   cat > "$RELEASE_NOTES_PATH" <<NOTES
 # $APP_NAME $VERSION
 
@@ -334,6 +341,7 @@ Install by opening \`$(basename "$DMG_PATH")\` and dragging \`$APP_NAME.app\` to
 
 Minimum macOS: $MIN_MACOS_VERSION
 Build: $BUILD_NUMBER
+$distribution_note
 
 Verify the download:
 

@@ -14,18 +14,21 @@ on:
         description: 'Optional numeric build number. Defaults to the workflow run number.'
         required: false
         type: string
-      skip_notarization:
-        description: 'Build and sign without notarizing. Use only for diagnostics.'
+      distribution:
+        description: 'Distribution mode. unsigned requires no Apple Developer account; signed requires Developer ID secrets.'
         required: false
-        default: false
-        type: boolean
+        default: unsigned
+        type: choice
+        options:
+          - unsigned
+          - signed
 
 permissions:
   contents: write
 
 jobs:
   release:
-    name: Build, notarize, and publish
+    name: Build and publish
     runs-on: macos-latest
 
     steps:
@@ -50,9 +53,15 @@ jobs:
             build_number="${GITHUB_RUN_NUMBER}"
           fi
 
+          distribution="${{ inputs.distribution }}"
+          if [[ -z "$distribution" ]]; then
+            distribution="unsigned"
+          fi
+
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
+          echo "distribution=$distribution" >> "$GITHUB_OUTPUT"
 
       - name: Show Xcode version
         run: |
@@ -60,6 +69,7 @@ jobs:
           xcodebuild -version
 
       - name: Import Developer ID certificate
+        if: steps.release.outputs.distribution == 'signed'
         env:
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -115,9 +125,16 @@ jobs:
             --version "${{ steps.release.outputs.version }}"
             --build-number "${{ steps.release.outputs.build_number }}"
           )
-          if [[ "${{ inputs.skip_notarization }}" == "true" ]]; then
-            args+=(--skip-notarization)
+
+          if [[ "${{ steps.release.outputs.distribution }}" == "unsigned" ]]; then
+            args+=(--export-unsigned --skip-notarization)
+          else
+            if [[ -z "${APPLE_TEAM_ID:-}" || -z "${APPLE_ID:-}" || -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]]; then
+              echo "Signed releases require APPLE_TEAM_ID, APPLE_ID, and APPLE_APP_SPECIFIC_PASSWORD secrets." >&2
+              exit 1
+            fi
           fi
+
           scripts/package-release.sh "${args[@]}"
 
       - name: Publish GitHub Release
