@@ -1,15 +1,13 @@
 # QuotaScope Release Guide
 
 QuotaScope is distributed outside the Mac App Store through GitHub Releases.
-The release artifact is a Developer ID signed, notarized DMG containing
-`QuotaScope.app` and an `/Applications` shortcut.
+By default, releases are unsigned DMGs so the project can ship without a paid
+Apple Developer Program membership. A future Developer ID signed and notarized
+release path is still available when Apple credentials are configured.
 
 ## Prerequisites
 
 - Full Xcode selected with `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`
-- An Apple Developer Program membership
-- A `Developer ID Application` certificate installed locally or imported by CI
-- An app-specific password for `xcrun notarytool`, or a stored notarytool keychain profile
 - GitHub repository write access for publishing releases
 
 The default bundle identifiers are:
@@ -21,7 +19,24 @@ If you want to ship under a different namespace, change the defaults in
 `scripts/release-config.sh` and the `QUOTASCOPE_*_BUNDLE_ID` defaults in the
 Xcode project before your first public release.
 
-## Local Signed Release
+## Local Unsigned Release
+
+Create a free local release DMG for smoke testing or small-scale GitHub
+distribution:
+
+```sh
+scripts/package-release.sh \
+  --version 1.0.0 \
+  --build-number 100 \
+  --export-unsigned \
+  --skip-notarization
+```
+
+Unsigned releases are not notarized. Users who download them from the internet
+may need to Control-click the app and choose Open, or approve the app in macOS
+Privacy & Security settings.
+
+## Developer ID Release
 
 Create a signed and notarized release:
 
@@ -44,16 +59,6 @@ NOTARY_KEYCHAIN_PROFILE=quotascope-notary \
 scripts/package-release.sh --version 1.0.0 --build-number 100
 ```
 
-For a local smoke-test DMG that is not suitable for distribution:
-
-```sh
-scripts/package-release.sh \
-  --version 1.0.0 \
-  --build-number 100 \
-  --export-unsigned \
-  --skip-notarization
-```
-
 Artifacts are written to `dist/release/`:
 
 - `QuotaScope-<version>.dmg`
@@ -63,9 +68,13 @@ Artifacts are written to `dist/release/`:
 ## GitHub Releases
 
 The `.github/workflows/release.yml` workflow publishes a GitHub Release when a
-tag matching `v*` is pushed. It can also be run manually from the Actions tab.
+tag matching `v*` is pushed. Tag releases use the free unsigned distribution
+mode by default. The workflow can also be run manually from the Actions tab,
+where `distribution` can be set to `unsigned` or `signed`.
 
-Required repository secrets:
+No repository secrets are required for unsigned releases.
+
+Signed Developer ID releases require these repository secrets:
 
 - `APPLE_CERTIFICATE_BASE64`: base64-encoded `.p12` Developer ID Application certificate
 - `APPLE_CERTIFICATE_PASSWORD`: password for that `.p12`
@@ -103,9 +112,11 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The workflow builds the Release app, signs the WidgetKit extension and host app,
-creates the DMG, submits it with `xcrun notarytool`, staples the notarization
-ticket, writes `SHA256SUMS`, and uploads both files to GitHub Releases.
+In unsigned mode, the workflow builds the Release app, skips signing and
+notarization, creates the DMG, writes `SHA256SUMS`, and uploads both files to
+GitHub Releases. In signed mode, it also signs the WidgetKit extension and host
+app, submits the DMG with `xcrun notarytool`, and staples the notarization
+ticket before upload.
 
 ## Verification
 
@@ -113,7 +124,6 @@ Before publishing, run:
 
 ```sh
 scripts/test-release-channel.sh
-scripts/verify-release-environment.sh
 ```
 
 On a machine with full Xcode, also run:
@@ -121,6 +131,12 @@ On a machine with full Xcode, also run:
 ```sh
 swift test
 scripts/package-release.sh --dry-run --version 1.0.0 --build-number 100
+```
+
+For signed Developer ID releases, also run:
+
+```sh
+scripts/verify-release-environment.sh
 ```
 
 After downloading a release:
@@ -142,6 +158,9 @@ select full Xcode:
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 ```
 
-If notarization fails, run the packaging script again with the same version and
-`--skip-notarization` to confirm signing and DMG creation are healthy, then fix
-the Apple credentials or entitlement issue reported by `xcrun notarytool`.
+If an unsigned GitHub Release is blocked by macOS on another machine, use
+Control-click -> Open, or approve the app in Privacy & Security settings. If a
+signed release notarization fails, run the packaging script again with the same
+version and `--skip-notarization` to confirm signing and DMG creation are
+healthy, then fix the Apple credentials or entitlement issue reported by
+`xcrun notarytool`.

@@ -51,12 +51,13 @@ swift test
 ## Distribution
 
 QuotaScope ships outside the Mac App Store through GitHub Releases. The release
-channel builds a Release app, signs the host app and WidgetKit extension with a
-Developer ID Application certificate, creates a DMG, submits it to Apple
-notarization, staples the ticket, and uploads the DMG plus `SHA256SUMS`.
+channel builds a Release app, creates a DMG, and uploads the DMG plus
+`SHA256SUMS`. By default this is a free unsigned release that does not require
+an Apple Developer Program membership. A Developer ID signed and notarized
+release path is available later if Apple credentials are configured.
 
 See [docs/release.md](docs/release.md) for local release commands, GitHub
-Actions secrets, and troubleshooting.
+Actions distribution modes, and troubleshooting.
 
 The SwiftPM package is intentionally only the testable core library. The actual
 macOS widget lives in `CodexWatcher.xcodeproj` as a host app plus
