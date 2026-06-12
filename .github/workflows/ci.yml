@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate macOS build and release wiring
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: |
+          xcode-select -p
+          xcodebuild -version
+
+      - name: Validate release channel wiring
+        run: scripts/test-release-channel.sh
+
+      - name: Run Swift tests
+        run: swift test
+
+      - name: Compile app without signing
+        run: |
+          xcodebuild \
+            -project CodexWatcher.xcodeproj \
+            -scheme CodexWatcher \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -derivedDataPath build/CIDerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY= \
+            build

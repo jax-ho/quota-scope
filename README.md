@@ -48,6 +48,16 @@ Run the core parser and formatter tests:
 swift test
 ```
 
+## Distribution
+
+QuotaScope ships outside the Mac App Store through GitHub Releases. The release
+channel builds a Release app, signs the host app and WidgetKit extension with a
+Developer ID Application certificate, creates a DMG, submits it to Apple
+notarization, staples the ticket, and uploads the DMG plus `SHA256SUMS`.
+
+See [docs/release.md](docs/release.md) for local release commands, GitHub
+Actions secrets, and troubleshooting.
+
 The SwiftPM package is intentionally only the testable core library. The actual
 macOS widget lives in `CodexWatcher.xcodeproj` as a host app plus
 `CodexWatcherWidgetExtension.appex`.
