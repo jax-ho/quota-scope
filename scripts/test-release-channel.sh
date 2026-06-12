@@ -32,6 +32,7 @@ assert_executable "scripts/verify-release-environment.sh"
 assert_file ".github/workflows/release.yml"
 assert_file ".github/workflows/ci.yml"
 assert_file "docs/release.md"
+assert_file "AGENTS.md"
 
 # shellcheck source=/dev/null
 source "$ROOT_DIR/scripts/release-config.sh"
@@ -117,5 +118,10 @@ assert_contains "docs/release.md" "xcrun notarytool"
 assert_contains "docs/release.md" "APPLE_CERTIFICATE_BASE64"
 assert_contains "docs/release.md" "scripts/package-release.sh"
 assert_contains "docs/release.md" "scripts/verify-release-environment.sh"
+
+assert_contains "AGENTS.md" "docs/release\\.md"
+assert_contains "AGENTS.md" "AI Release Runbook"
+assert_contains "AGENTS.md" "scripts/test-release-channel\\.sh"
+assert_contains "AGENTS.md" "unsigned GitHub Releases"
 
 echo "release-channel tests passed"
