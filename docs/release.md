@@ -125,6 +125,14 @@ notarization ticket before upload.
 Use this checklist when asking an AI agent to publish the next unsigned GitHub
 Release.
 
+If a user asks to package, update, ship, publish, release, or verify GitHub
+Release availability after a fix, do not stop after merging to `main`. Once the
+fix is on `main`, continue through this checklist: choose the next unused `v*`
+tag, run the release checks and unsigned dry run, push the tag, watch the
+GitHub `Release` workflow to completion, and verify the release page contains
+the DMG and `SHA256SUMS`. If the user only asks to merge and release intent is
+ambiguous, ask once whether to cut a GitHub Release now.
+
 1. Confirm the checkout is on `main` and clean:
 
 ```sh
