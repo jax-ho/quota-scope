@@ -115,29 +115,51 @@ public struct CodexUsageAPIRateLimitCache: Sendable {
 }
 
 public struct CodexUsageAPIClient: Sendable {
-    public static let defaultUsageURL = URL(string: "https://chatgpt.com/backend-api/codex/usage")!
+    public static let whamUsageURL = URL(string: "https://chatgpt.com/backend-api/wham/usage")!
+    public static let codexUsageURL = URL(string: "https://chatgpt.com/backend-api/codex/usage")!
+    public static let defaultUsageURL = whamUsageURL
+    public static let defaultFallbackUsageURLs = [codexUsageURL]
 
     public var authStore: CodexAuthStore
     public var usageURL: URL
+    public var fallbackUsageURLs: [URL]
     public var cache: CodexUsageAPIRateLimitCache
 
+    private let profileLoader: any CodexUsageProfileLoading
     private let httpClient: any CodexUsageHTTPClient
 
     public init(
         authStore: CodexAuthStore = CodexAuthStore(),
         usageURL: URL = Self.defaultUsageURL,
+        fallbackUsageURLs: [URL] = Self.defaultFallbackUsageURLs,
         cache: CodexUsageAPIRateLimitCache = CodexUsageAPIRateLimitCache(),
+        profileLoader: any CodexUsageProfileLoading = CodexAppServerUsageClient(),
         httpClient: any CodexUsageHTTPClient = URLSession.shared
     ) {
         self.authStore = authStore
         self.usageURL = usageURL
+        self.fallbackUsageURLs = fallbackUsageURLs
         self.cache = cache
+        self.profileLoader = profileLoader
         self.httpClient = httpClient
     }
 
     public func fetchRateLimits() async throws -> RateLimits {
+        var lastError: Error?
+        for url in [usageURL] + fallbackUsageURLs {
+            do {
+                return try await fetchRateLimits(from: url)
+            } catch {
+                lastError = error
+            }
+        }
+
+        throw lastError ?? CodexUsageAPIError.missingRateLimits
+    }
+
+    private func fetchRateLimits(from url: URL) async throws -> RateLimits {
         let auth = try authStore.loadChatGPTAuth()
-        var request = URLRequest(url: usageURL)
+        var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(auth.accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue(auth.accountID, forHTTPHeaderField: "ChatGPT-Account-Id")
@@ -166,13 +188,17 @@ public struct CodexUsageAPIClient: Sendable {
     }
 
     private func loadAPISnapshot(now: Date) async -> CodexUsageSnapshot {
+        let profile = await profileLoader.loadUsageProfile(now: now)
         do {
             let rateLimits = try await fetchRateLimits()
             cache.save(rateLimits: rateLimits, fetchedAt: now)
-            return Self.apiSnapshot(rateLimits: rateLimits, now: now)
+            return Self.apiSnapshot(rateLimits: rateLimits, now: now, profile: profile)
         } catch {
             if let cachedRateLimits = cache.load(now: now) {
-                return Self.apiSnapshot(rateLimits: cachedRateLimits, now: now)
+                return Self.apiSnapshot(rateLimits: cachedRateLimits, now: now, profile: profile)
+            }
+            if let profile {
+                return Self.profileSnapshot(profile: profile, now: now)
             }
             return CodexUsageSnapshot()
         }
@@ -183,13 +209,25 @@ public struct CodexUsageAPIClient: Sendable {
         to _: CodexUsageSnapshot,
         now: Date
     ) -> CodexUsageSnapshot {
-        apiSnapshot(rateLimits: apiRateLimits, now: now)
+        apiSnapshot(rateLimits: apiRateLimits, now: now, profile: nil)
     }
 
-    private static func apiSnapshot(rateLimits: RateLimits, now: Date) -> CodexUsageSnapshot {
+    private static func apiSnapshot(rateLimits: RateLimits, now: Date, profile: CodexUsageProfile?) -> CodexUsageSnapshot {
         return CodexUsageSnapshot(
             latestEvent: CodexUsageEvent(timestamp: now, rateLimits: rateLimits),
-            rateLimits: rateLimits
+            rateLimits: rateLimits,
+            tokensToday: profile?.tokensToday ?? TokenUsage(),
+            tokensThisWeek: profile?.tokensThisWeek ?? TokenUsage(),
+            dailyUsageLast7Days: profile?.dailyUsageLast7Days ?? []
+        )
+    }
+
+    private static func profileSnapshot(profile: CodexUsageProfile, now: Date) -> CodexUsageSnapshot {
+        return CodexUsageSnapshot(
+            latestEvent: CodexUsageEvent(timestamp: now),
+            tokensToday: profile.tokensToday,
+            tokensThisWeek: profile.tokensThisWeek,
+            dailyUsageLast7Days: profile.dailyUsageLast7Days
         )
     }
 }

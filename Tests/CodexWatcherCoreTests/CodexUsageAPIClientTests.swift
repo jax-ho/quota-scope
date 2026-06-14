@@ -2,6 +2,17 @@ import XCTest
 @testable import CodexWatcherCore
 
 final class CodexUsageAPIClientTests: XCTestCase {
+    func testDefaultUsageEndpointUsesWhamAPIWithCodexFallback() {
+        XCTAssertEqual(
+            CodexUsageAPIClient.defaultUsageURL.absoluteString,
+            "https://chatgpt.com/backend-api/wham/usage"
+        )
+        XCTAssertEqual(
+            CodexUsageAPIClient.defaultFallbackUsageURLs.map(\.absoluteString),
+            ["https://chatgpt.com/backend-api/codex/usage"]
+        )
+    }
+
     func testDecodesCodexUsageResponseIntoRateLimits() throws {
         let data = Data("""
         {
@@ -45,6 +56,7 @@ final class CodexUsageAPIClientTests: XCTestCase {
         let client = CodexUsageAPIClient(
             authStore: CodexAuthStore(codexHome: codexHome),
             cache: CodexUsageAPIRateLimitCache(url: nil),
+            profileLoader: EmptyCodexUsageProfileLoader(),
             httpClient: StubHTTPClient(data: codexUsageAPIResponseData())
         )
 
@@ -66,6 +78,36 @@ final class CodexUsageAPIClientTests: XCTestCase {
         XCTAssertEqual(summary.sevenDayLimitText, "90%")
         XCTAssertEqual(summary.todayTokensText, "--")
         XCTAssertEqual(summary.planText, "prolite")
+    }
+
+    func testLoadSnapshotMergesAppServerUsageProfileWithHTTPRateLimits() async throws {
+        let now = try XCTUnwrap(codexTestDate("2026-06-14T08:00:00.000Z"))
+        let codexHome = try makeCodexHomeWithAuthAndLocalUsage()
+        defer {
+            try? FileManager.default.removeItem(at: codexHome)
+        }
+        let profile = CodexUsageProfile(
+            tokensToday: TokenUsage(totalTokens: 222),
+            tokensThisWeek: TokenUsage(totalTokens: 1_234_567),
+            dailyUsageLast7Days: [
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-08T00:00:00.000Z")), usage: TokenUsage(totalTokens: 111)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-09T00:00:00.000Z")), usage: TokenUsage(totalTokens: 222))
+            ]
+        )
+        let client = CodexUsageAPIClient(
+            authStore: CodexAuthStore(codexHome: codexHome),
+            cache: CodexUsageAPIRateLimitCache(url: nil),
+            profileLoader: StubUsageProfileLoader(profile: profile),
+            httpClient: StubHTTPClient(data: codexUsageAPIResponseData())
+        )
+
+        let snapshot = await client.loadSnapshot(codexHome: codexHome, now: now)
+
+        XCTAssertEqual(snapshot.rateLimits?.planType, "prolite")
+        XCTAssertEqual(snapshot.tokensToday.totalTokens, 222)
+        XCTAssertEqual(snapshot.tokensThisWeek.totalTokens, 1_234_567)
+        XCTAssertEqual(snapshot.dailyUsageLast7Days, profile.dailyUsageLast7Days)
+        XCTAssertEqual(snapshot.eventCount, 0)
     }
 
     func testApplyBuildsAPISnapshotWithoutLocalTokenTotals() throws {
@@ -104,6 +146,34 @@ final class CodexUsageAPIClientTests: XCTestCase {
         XCTAssertEqual(snapshot.eventCount, 0)
     }
 
+    func testFetchRateLimitsFallsBackToCodexEndpointWhenPrimaryFails() async throws {
+        let now = try XCTUnwrap(codexTestDate("2026-05-25T04:20:00.000Z"))
+        let codexHome = try makeCodexHomeWithAuthAndLocalUsage()
+        defer {
+            try? FileManager.default.removeItem(at: codexHome)
+        }
+        let httpClient = SequencedHTTPClient(responses: [
+            StubHTTPResponse(data: Data(#"{"error":"forbidden"}"#.utf8), statusCode: 403),
+            StubHTTPResponse(data: codexUsageAPIResponseData(), statusCode: 200)
+        ])
+        let client = CodexUsageAPIClient(
+            authStore: CodexAuthStore(codexHome: codexHome),
+            usageURL: URL(string: "https://chatgpt.com/backend-api/wham/usage")!,
+            fallbackUsageURLs: [URL(string: "https://chatgpt.com/backend-api/codex/usage")!],
+            cache: CodexUsageAPIRateLimitCache(url: nil),
+            profileLoader: EmptyCodexUsageProfileLoader(),
+            httpClient: httpClient
+        )
+
+        let snapshot = await client.loadSnapshot(codexHome: codexHome, now: now)
+
+        XCTAssertEqual(snapshot.rateLimits?.planType, "prolite")
+        XCTAssertEqual(httpClient.requestedURLs.map(\.absoluteString), [
+            "https://chatgpt.com/backend-api/wham/usage",
+            "https://chatgpt.com/backend-api/codex/usage"
+        ])
+    }
+
     func testLoadSnapshotReturnsEmptyWhenAPIFetchFailsWithoutCachedAPIData() async throws {
         let now = try XCTUnwrap(codexTestDate("2026-05-25T04:20:00.000Z"))
         let codexHome = try makeCodexHomeWithAuthAndLocalUsage()
@@ -113,6 +183,7 @@ final class CodexUsageAPIClientTests: XCTestCase {
         let client = CodexUsageAPIClient(
             authStore: CodexAuthStore(codexHome: codexHome),
             cache: CodexUsageAPIRateLimitCache(url: nil),
+            profileLoader: EmptyCodexUsageProfileLoader(),
             httpClient: StubHTTPClient(data: Data(#"{"error":"unavailable"}"#.utf8), statusCode: 500)
         )
 
@@ -176,6 +247,14 @@ final class CodexUsageAPIClientTests: XCTestCase {
     }
 }
 
+private struct StubUsageProfileLoader: CodexUsageProfileLoading {
+    var profile: CodexUsageProfile?
+
+    func loadUsageProfile(now _: Date) async -> CodexUsageProfile? {
+        profile
+    }
+}
+
 private struct StubHTTPClient: CodexUsageHTTPClient {
     var data: Data
     var statusCode: Int = 200
@@ -188,5 +267,34 @@ private struct StubHTTPClient: CodexUsageHTTPClient {
             headerFields: nil
         )!
         return (data, response)
+    }
+}
+
+private struct StubHTTPResponse {
+    var data: Data
+    var statusCode: Int
+}
+
+private final class SequencedHTTPClient: CodexUsageHTTPClient, @unchecked Sendable {
+    private var responses: [StubHTTPResponse]
+    private(set) var requestedURLs: [URL] = []
+
+    init(responses: [StubHTTPResponse]) {
+        self.responses = responses
+    }
+
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        requestedURLs.append(request.url!)
+        let response = responses.isEmpty
+            ? StubHTTPResponse(data: Data(), statusCode: 500)
+            : responses.removeFirst()
+
+        let httpResponse = HTTPURLResponse(
+            url: request.url!,
+            statusCode: response.statusCode,
+            httpVersion: nil,
+            headerFields: nil
+        )!
+        return (response.data, httpResponse)
     }
 }

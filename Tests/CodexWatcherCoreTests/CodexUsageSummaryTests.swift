@@ -110,6 +110,7 @@ final class CodexUsageSummaryTests: XCTestCase {
         XCTAssertEqual(summary.weekSummaryText, "Week 812.7K")
         XCTAssertEqual(summary.updatedAtText, "Updated 12:42")
         XCTAssertEqual(summary.weeklyBars.map(\.label), ["Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Today"])
+        XCTAssertEqual(summary.weeklyBars.map(\.isValueTextVisible), [true, true, true, true, true, true, true])
         XCTAssertEqual(summary.weeklyBars.last?.valueText, "128K")
         XCTAssertEqual(summary.weeklyBars.last?.isToday, true)
         XCTAssertEqual(summary.weeklyBars.map(\.normalizedHeight).max(), 1)

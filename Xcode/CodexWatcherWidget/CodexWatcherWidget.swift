@@ -860,14 +860,16 @@ private struct ChartBar: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            if bar.isToday {
+            if bar.isValueTextVisible {
                 Text(bar.valueText)
-                    .font(.system(size: 8.2, weight: .semibold))
+                    .font(.system(size: bar.isToday ? 8.2 : 7.4, weight: bar.isToday ? .semibold : .medium))
                     .monospacedDigit()
-                    .foregroundStyle(palette.mintBrand)
+                    .foregroundStyle(bar.isToday ? palette.mintBrand : palette.textTertiary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.62)
                     .frame(height: 10)
                     .frame(width: columnWidth)
-                    .widgetAccentable()
+                    .widgetAccentable(bar.isToday)
             } else {
                 Spacer()
                     .frame(height: 10)

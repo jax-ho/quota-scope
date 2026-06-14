@@ -8,21 +8,24 @@ It shows:
 - plan type from the Codex usage API
 - 5-hour Codex limit remaining from `rate_limit.primary_window.used_percent`
 - 7-day Codex limit remaining from `rate_limit.secondary_window.used_percent`
-- token usage placeholders when the API does not provide token totals
+- today, week, and last-7-days token totals from Codex `account/usage/read`
 
 ## Why This Approach
 
 Local Codex session JSONL can lag behind or disagree with the official Codex
 usage page. QuotaScope therefore treats the API as the only widget data source.
 It reads `~/.codex/auth.json` for the ChatGPT access token and account id, then
-requests:
+requests rate limits from:
 
 ```text
+https://chatgpt.com/backend-api/wham/usage
 https://chatgpt.com/backend-api/codex/usage
 ```
 
-If the API is unavailable, the widget may use a short-lived API response cache.
-Without fresh or cached API data, quota values display as `--` instead of
+For historical token totals, QuotaScope asks the Codex app-server
+`account/usage/read` API for `dailyUsageBuckets`. If those APIs are
+unavailable, the widget may use a short-lived QuotaScope API response cache.
+Without fresh or cached API data, values display as `--` or `0` instead of
 falling back to local session logs.
 
 ## Build And Install
@@ -73,5 +76,5 @@ macOS widget lives in `CodexWatcher.xcodeproj` as a host app plus
   `~/.codex/` for `auth.json`.
 - Codex stores limit data as used percentages; the widget displays remaining
   percentages (`100 - used_percent`) so the number means quota left.
-- Token totals remain placeholders unless the Codex usage API starts returning
-  token totals that QuotaScope can decode.
+- Token totals come from Codex app-server `account/usage/read` daily buckets,
+  not from local Codex session JSONL.
