@@ -75,15 +75,27 @@ public struct CodexUsageSummary: Equatable, Sendable {
         sevenDayLimitText = Self.percentText(secondaryPercent)
         fiveHourLimitPercent = primaryPercent
         sevenDayLimitPercent = secondaryPercent
-        todayTokensText = Self.shortNumber(snapshot.tokensToday.totalTokens)
-        todayInputMissText = Self.shortNumber(snapshot.tokensToday.uncachedInputTokens)
-        todayInputCacheText = Self.shortNumber(snapshot.tokensToday.cachedInputTokens)
-        todayOutputText = Self.shortNumber(snapshot.tokensToday.outputTokens)
-        thisWeekTokensText = Self.shortNumber(snapshot.tokensThisWeek.totalTokens)
-        thisWeekInputMissText = Self.shortNumber(snapshot.tokensThisWeek.uncachedInputTokens)
-        thisWeekInputCacheText = Self.shortNumber(snapshot.tokensThisWeek.cachedInputTokens)
-        thisWeekOutputText = Self.shortNumber(snapshot.tokensThisWeek.outputTokens)
-        weekSummaryText = "Week \(thisWeekTokensText)"
+        if Self.hasTokenUsageData(snapshot) {
+            todayTokensText = Self.shortNumber(snapshot.tokensToday.totalTokens)
+            todayInputMissText = Self.shortNumber(snapshot.tokensToday.uncachedInputTokens)
+            todayInputCacheText = Self.shortNumber(snapshot.tokensToday.cachedInputTokens)
+            todayOutputText = Self.shortNumber(snapshot.tokensToday.outputTokens)
+            thisWeekTokensText = Self.shortNumber(snapshot.tokensThisWeek.totalTokens)
+            thisWeekInputMissText = Self.shortNumber(snapshot.tokensThisWeek.uncachedInputTokens)
+            thisWeekInputCacheText = Self.shortNumber(snapshot.tokensThisWeek.cachedInputTokens)
+            thisWeekOutputText = Self.shortNumber(snapshot.tokensThisWeek.outputTokens)
+            weekSummaryText = "Week \(thisWeekTokensText)"
+        } else {
+            todayTokensText = "--"
+            todayInputMissText = "--"
+            todayInputCacheText = "--"
+            todayOutputText = "--"
+            thisWeekTokensText = "--"
+            thisWeekInputMissText = "--"
+            thisWeekInputCacheText = "--"
+            thisWeekOutputText = "--"
+            weekSummaryText = "Week --"
+        }
         updatedAtText = Self.timeText(latest.timestamp, timeZone: timeZone)
         weeklyBars = Self.weeklyBars(snapshot.dailyUsageLast7Days, now: now, timeZone: timeZone)
         isEmpty = false
@@ -101,6 +113,13 @@ public struct CodexUsageSummary: Equatable, Sendable {
             return nil
         }
         return min(max(100 - value, 0), 100)
+    }
+
+    private static func hasTokenUsageData(_ snapshot: CodexUsageSnapshot) -> Bool {
+        snapshot.eventCount > 0
+            || snapshot.tokensToday.totalTokens > 0
+            || snapshot.tokensThisWeek.totalTokens > 0
+            || !snapshot.dailyUsageLast7Days.isEmpty
     }
 
     private static func resetText(_ resetAt: Date?, now: Date, timeZone: TimeZone) -> String {

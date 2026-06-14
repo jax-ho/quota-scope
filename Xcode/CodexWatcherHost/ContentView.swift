@@ -6,9 +6,7 @@ struct ContentView: View {
     private let metricColumns = [
         GridItem(.adaptive(minimum: 140), spacing: 16, alignment: .top)
     ]
-    @State private var summary = CodexUsageSummary(
-        snapshot: CodexUsageAPIClient.removingLocalRateLimits(from: CodexUsageLogStore.loadSnapshot())
-    )
+    @State private var summary = CodexUsageSummary(snapshot: CodexUsageSnapshot())
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
