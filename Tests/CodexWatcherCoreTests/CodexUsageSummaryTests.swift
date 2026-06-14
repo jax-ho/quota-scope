@@ -137,4 +137,37 @@ final class CodexUsageSummaryTests: XCTestCase {
         XCTAssertEqual(summary.weeklyBars.count, 0)
         XCTAssertTrue(summary.isEmpty)
     }
+
+    func testAPISnapshotWithoutTokenUsageUsesTokenPlaceholders() throws {
+        let now = try XCTUnwrap(codexTestDate("2026-05-25T04:20:00.000Z"))
+        let snapshot = CodexUsageSnapshot(
+            latestEvent: CodexUsageEvent(
+                timestamp: now,
+                rateLimits: RateLimits(
+                    primary: RateWindow(usedPercent: 17, windowMinutes: 300),
+                    secondary: RateWindow(usedPercent: 10, windowMinutes: 10_080),
+                    planType: "prolite"
+                )
+            ),
+            rateLimits: RateLimits(
+                primary: RateWindow(usedPercent: 17, windowMinutes: 300),
+                secondary: RateWindow(usedPercent: 10, windowMinutes: 10_080),
+                planType: "prolite"
+            )
+        )
+
+        let summary = CodexUsageSummary(snapshot: snapshot, now: now)
+
+        XCTAssertEqual(summary.planText, "prolite")
+        XCTAssertEqual(summary.fiveHourLimitText, "83%")
+        XCTAssertEqual(summary.sevenDayLimitText, "90%")
+        XCTAssertEqual(summary.todayTokensText, "--")
+        XCTAssertEqual(summary.todayInputMissText, "--")
+        XCTAssertEqual(summary.todayInputCacheText, "--")
+        XCTAssertEqual(summary.todayOutputText, "--")
+        XCTAssertEqual(summary.thisWeekTokensText, "--")
+        XCTAssertEqual(summary.weekSummaryText, "Week --")
+        XCTAssertEqual(summary.weeklyBars, [])
+        XCTAssertFalse(summary.isEmpty)
+    }
 }

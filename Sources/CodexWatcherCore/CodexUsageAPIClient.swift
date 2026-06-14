@@ -2,6 +2,9 @@ import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
+#if os(macOS)
+import Darwin
+#endif
 
 public enum CodexUsageAPIError: Error, Equatable {
     case missingAuth
@@ -23,7 +26,7 @@ public struct CodexChatGPTAuth: Equatable, Sendable {
 public struct CodexAuthStore: Sendable {
     public var codexHome: URL
 
-    public init(codexHome: URL = CodexUsageLogStore.defaultCodexHome()) {
+    public init(codexHome: URL = Self.defaultCodexHome()) {
         self.codexHome = codexHome
     }
 
@@ -39,6 +42,21 @@ public struct CodexAuthStore: Sendable {
         }
 
         return CodexChatGPTAuth(accessToken: accessToken, accountID: accountID)
+    }
+
+    public static func defaultCodexHome() -> URL {
+        realHomeDirectory().appendingPathComponent(".codex")
+    }
+
+    private static func realHomeDirectory() -> URL {
+        #if os(macOS)
+        if let passwd = getpwuid(getuid()),
+           let home = passwd.pointee.pw_dir {
+            return URL(fileURLWithPath: String(cString: home), isDirectory: true)
+        }
+        #endif
+
+        return FileManager.default.homeDirectoryForCurrentUser
     }
 }
 
@@ -137,73 +155,41 @@ public struct CodexUsageAPIClient: Sendable {
         return try CodexUsageAPIResponse.decodeRateLimits(from: data)
     }
 
-    public func loadSnapshot(
-        codexHome: URL = CodexUsageLogStore.defaultCodexHome(),
-        now: Date = Date()
-    ) async -> CodexUsageSnapshot {
-        let localSnapshot = CodexUsageLogStore.loadSnapshot(codexHome: codexHome, now: now)
-        return await loadSnapshot(localSnapshot: localSnapshot, now: now)
+    public func loadSnapshot(now: Date = Date()) async -> CodexUsageSnapshot {
+        await loadAPISnapshot(now: now)
     }
 
-    public func loadSnapshot(localSnapshot: CodexUsageSnapshot, now: Date = Date()) async -> CodexUsageSnapshot {
+    public func loadSnapshot(codexHome: URL, now: Date = Date()) async -> CodexUsageSnapshot {
+        var client = self
+        client.authStore = CodexAuthStore(codexHome: codexHome)
+        return await client.loadAPISnapshot(now: now)
+    }
+
+    private func loadAPISnapshot(now: Date) async -> CodexUsageSnapshot {
         do {
             let rateLimits = try await fetchRateLimits()
             cache.save(rateLimits: rateLimits, fetchedAt: now)
-            return Self.apply(apiRateLimits: rateLimits, to: localSnapshot, now: now)
+            return Self.apiSnapshot(rateLimits: rateLimits, now: now)
         } catch {
             if let cachedRateLimits = cache.load(now: now) {
-                return Self.apply(apiRateLimits: cachedRateLimits, to: localSnapshot, now: now)
+                return Self.apiSnapshot(rateLimits: cachedRateLimits, now: now)
             }
-            return localSnapshot
+            return CodexUsageSnapshot()
         }
     }
 
     public static func apply(
         apiRateLimits: RateLimits,
-        to snapshot: CodexUsageSnapshot,
+        to _: CodexUsageSnapshot,
         now: Date
     ) -> CodexUsageSnapshot {
-        let latestEvent: CodexUsageEvent
-        if var existing = snapshot.latestEvent {
-            existing.timestamp = now
-            existing.rateLimits = apiRateLimits
-            latestEvent = existing
-        } else {
-            latestEvent = CodexUsageEvent(timestamp: now, rateLimits: apiRateLimits)
-        }
-
-        return Self.snapshot(
-            preservingUsageFrom: snapshot,
-            latestEvent: latestEvent,
-            rateLimits: apiRateLimits
-        )
+        apiSnapshot(rateLimits: apiRateLimits, now: now)
     }
 
-    public static func removingLocalRateLimits(from snapshot: CodexUsageSnapshot) -> CodexUsageSnapshot {
-        var latestEvent = snapshot.latestEvent
-        latestEvent?.rateLimits = nil
-
-        return Self.snapshot(
-            preservingUsageFrom: snapshot,
-            latestEvent: latestEvent,
-            rateLimits: nil
-        )
-    }
-
-    private static func snapshot(
-        preservingUsageFrom snapshot: CodexUsageSnapshot,
-        latestEvent: CodexUsageEvent?,
-        rateLimits: RateLimits?
-    ) -> CodexUsageSnapshot {
+    private static func apiSnapshot(rateLimits: RateLimits, now: Date) -> CodexUsageSnapshot {
         return CodexUsageSnapshot(
-            latestEvent: latestEvent,
-            rateLimits: rateLimits,
-            tokensLast5Hours: snapshot.tokensLast5Hours,
-            tokensLast7Days: snapshot.tokensLast7Days,
-            tokensToday: snapshot.tokensToday,
-            tokensThisWeek: snapshot.tokensThisWeek,
-            dailyUsageLast7Days: snapshot.dailyUsageLast7Days,
-            eventCount: snapshot.eventCount
+            latestEvent: CodexUsageEvent(timestamp: now, rateLimits: rateLimits),
+            rateLimits: rateLimits
         )
     }
 }

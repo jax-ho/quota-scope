@@ -1,28 +1,29 @@
 # QuotaScope
 
-QuotaScope is a macOS WidgetKit widget that monitors local Codex usage from
-`~/.codex/sessions` and `~/.codex/archived_sessions`.
+QuotaScope is a macOS WidgetKit widget that monitors Codex quota from the
+ChatGPT Codex usage API.
 
 It shows:
 
-- 5-hour Codex limit remaining from `rate_limits.primary.used_percent`
-- 7-day Codex limit remaining from `rate_limits.secondary.used_percent`
-- today's local token usage, split into input cache miss, input cache hit, and output
-- current ISO week local token usage, split into input cache miss, input cache hit, and output
+- plan type from the Codex usage API
+- 5-hour Codex limit remaining from `rate_limit.primary_window.used_percent`
+- 7-day Codex limit remaining from `rate_limit.secondary_window.used_percent`
+- token usage placeholders when the API does not provide token totals
 
 ## Why This Approach
 
-Codex writes local session events as JSONL. `event_msg` records with
-`payload.type == "token_count"` include both token counters and rate-limit
-metadata:
+Local Codex session JSONL can lag behind or disagree with the official Codex
+usage page. QuotaScope therefore treats the API as the only widget data source.
+It reads `~/.codex/auth.json` for the ChatGPT access token and account id, then
+requests:
 
-- `total_token_usage`
-- `last_token_usage`
-- `rate_limits.primary`
-- `rate_limits.secondary`
+```text
+https://chatgpt.com/backend-api/codex/usage
+```
 
-That gives the app a local, read-only data source. It does not read
-`~/.codex/auth.json` or make network requests.
+If the API is unavailable, the widget may use a short-lived API response cache.
+Without fresh or cached API data, quota values display as `--` instead of
+falling back to local session logs.
 
 ## Build And Install
 
@@ -67,19 +68,10 @@ macOS widget lives in `CodexWatcher.xcodeproj` as a host app plus
 
 - WidgetKit controls the real refresh cadence. The widget asks for a new
   timeline roughly every 1 minute, but macOS may adjust that schedule.
-- The widget scans recent JSONL files from the last 8 days so it can
-  calculate today's token total and the current ISO week total.
-- Input cache miss is calculated as `input_tokens - cached_input_tokens`;
-  input cache hit uses `cached_input_tokens`; output uses `output_tokens`.
-- Parsed token events are cached by file size and modification time. Repeated
-  refreshes reuse the cache, and growing log files are read only from the last
-  cached byte offset.
 - The WidgetKit extension is sandboxed so macOS will register it as a real
-  widget. Its entitlements allow read-only access to `~/.codex/`.
-- Very large non-token event lines are skipped with a streaming reader, so the
-  widget does not load full historical session files into memory.
+  widget. Its entitlements allow network access and read-only access to
+  `~/.codex/` for `auth.json`.
 - Codex stores limit data as used percentages; the widget displays remaining
   percentages (`100 - used_percent`) so the number means quota left.
-- The limit percentages come from the latest local Codex `token_count` event.
-  If Codex has not written a recent event yet, the display may lag behind the
-  official Codex usage page.
+- Token totals remain placeholders unless the Codex usage API starts returning
+  token totals that QuotaScope can decode.

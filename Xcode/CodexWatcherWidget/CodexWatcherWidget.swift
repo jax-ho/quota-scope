@@ -1092,7 +1092,7 @@ struct CodexWatcherWidget: Widget {
             CodexWatcherWidgetView(entry: entry)
         }
         .configurationDisplayName("QuotaScope")
-        .description("Track local Codex limits and token usage.")
+        .description("Track Codex quota from the usage API.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         .contentMarginsDisabled()
         .containerBackgroundRemovable(false)
