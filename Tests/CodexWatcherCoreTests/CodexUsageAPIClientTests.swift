@@ -47,7 +47,7 @@ final class CodexUsageAPIClientTests: XCTestCase {
         XCTAssertEqual(rateLimits.secondary?.resetsAt, Date(timeIntervalSince1970: 1_780_213_854))
     }
 
-    func testLoadSnapshotUsesOnlyAPIDataAndIgnoresLocalCodexLogs() async throws {
+    func testLoadSnapshotUsesLocalTokenTotalsWithAPIRateLimits() async throws {
         let now = try XCTUnwrap(codexTestDate("2026-05-25T04:20:00.000Z"))
         let codexHome = try makeCodexHomeWithAuthAndLocalUsage()
         defer {
@@ -60,38 +60,53 @@ final class CodexUsageAPIClientTests: XCTestCase {
             httpClient: StubHTTPClient(data: codexUsageAPIResponseData())
         )
 
-        let snapshot = await client.loadSnapshot(codexHome: codexHome, now: now)
+        let snapshot = await client.loadSnapshot(now: now)
 
         XCTAssertEqual(snapshot.rateLimits?.planType, "prolite")
         XCTAssertEqual(snapshot.rateLimits?.primary?.usedPercent, 17)
         XCTAssertEqual(snapshot.rateLimits?.secondary?.usedPercent, 10)
         XCTAssertEqual(snapshot.latestEvent?.timestamp, now)
         XCTAssertEqual(snapshot.latestEvent?.rateLimits, snapshot.rateLimits)
-        XCTAssertEqual(snapshot.latestEvent?.totalUsage.totalTokens, 0)
-        XCTAssertEqual(snapshot.tokensToday.totalTokens, 0)
-        XCTAssertEqual(snapshot.tokensToday.cachedInputTokens, 0)
-        XCTAssertEqual(snapshot.tokensThisWeek.totalTokens, 0)
-        XCTAssertEqual(snapshot.eventCount, 0)
+        XCTAssertEqual(snapshot.tokensToday.totalTokens, 1_042_000)
+        XCTAssertEqual(snapshot.tokensToday.cachedInputTokens, 700_000)
+        XCTAssertEqual(snapshot.tokensThisWeek.totalTokens, 1_042_000)
+        XCTAssertEqual(snapshot.dailyUsageLast7Days.count, 7)
+        XCTAssertEqual(snapshot.dailyUsageLast7Days.last?.usage.totalTokens, 1_042_000)
+        XCTAssertEqual(snapshot.eventCount, 1)
 
         let summary = CodexUsageSummary(snapshot: snapshot, now: now)
         XCTAssertEqual(summary.fiveHourLimitText, "83%")
         XCTAssertEqual(summary.sevenDayLimitText, "90%")
-        XCTAssertEqual(summary.todayTokensText, "--")
+        XCTAssertEqual(summary.todayTokensText, "1.0M")
         XCTAssertEqual(summary.planText, "prolite")
     }
 
-    func testLoadSnapshotMergesAppServerUsageProfileWithHTTPRateLimits() async throws {
-        let now = try XCTUnwrap(codexTestDate("2026-06-14T08:00:00.000Z"))
-        let codexHome = try makeCodexHomeWithAuthAndLocalUsage()
+    func testLoadSnapshotUsesLocalTodayAndAPIHistoricalBuckets() async throws {
+        let now = try XCTUnwrap(codexTestDate("2026-06-14T12:00:00.000Z"))
+        let codexHome = try makeCodexHomeWithAuthAndLocalUsage(
+            eventLines: [
+                """
+                {"timestamp":"2026-06-13T10:00:00.000Z","type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":999000000,"cached_input_tokens":0,"output_tokens":0,"total_tokens":999000000}}}}
+                """,
+                """
+                {"timestamp":"2026-06-14T10:00:00.000Z","type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":30000000,"cached_input_tokens":10000000,"output_tokens":20000000,"total_tokens":50000000}}}}
+                """
+            ]
+        )
         defer {
             try? FileManager.default.removeItem(at: codexHome)
         }
         let profile = CodexUsageProfile(
-            tokensToday: TokenUsage(totalTokens: 222),
-            tokensThisWeek: TokenUsage(totalTokens: 1_234_567),
+            tokensToday: TokenUsage(totalTokens: 3_692_822),
+            tokensThisWeek: TokenUsage(totalTokens: 265_154_075),
             dailyUsageLast7Days: [
-                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-08T00:00:00.000Z")), usage: TokenUsage(totalTokens: 111)),
-                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-09T00:00:00.000Z")), usage: TokenUsage(totalTokens: 222))
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-08T10:00:00.000Z")), usage: TokenUsage(totalTokens: 27_974_994)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-09T10:00:00.000Z")), usage: TokenUsage(totalTokens: 126_395_029)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-10T10:00:00.000Z")), usage: TokenUsage(totalTokens: 6_588_974)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-11T10:00:00.000Z")), usage: TokenUsage(totalTokens: 35_779_928)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-12T10:00:00.000Z")), usage: TokenUsage(totalTokens: 49_044_300)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-13T10:00:00.000Z")), usage: TokenUsage(totalTokens: 15_678_028)),
+                CodexDailyUsage(date: try XCTUnwrap(codexTestDate("2026-06-14T10:00:00.000Z")), usage: TokenUsage(totalTokens: 3_692_822))
             ]
         )
         let client = CodexUsageAPIClient(
@@ -104,13 +119,25 @@ final class CodexUsageAPIClientTests: XCTestCase {
         let snapshot = await client.loadSnapshot(codexHome: codexHome, now: now)
 
         XCTAssertEqual(snapshot.rateLimits?.planType, "prolite")
-        XCTAssertEqual(snapshot.tokensToday.totalTokens, 222)
-        XCTAssertEqual(snapshot.tokensThisWeek.totalTokens, 1_234_567)
-        XCTAssertEqual(snapshot.dailyUsageLast7Days, profile.dailyUsageLast7Days)
-        XCTAssertEqual(snapshot.eventCount, 0)
+        XCTAssertEqual(snapshot.tokensToday.totalTokens, 50_000_000)
+        XCTAssertEqual(snapshot.tokensToday.inputTokens, 30_000_000)
+        XCTAssertEqual(snapshot.tokensToday.cachedInputTokens, 10_000_000)
+        XCTAssertEqual(snapshot.tokensToday.outputTokens, 20_000_000)
+        XCTAssertEqual(snapshot.tokensThisWeek.totalTokens, 311_461_253)
+        XCTAssertEqual(snapshot.tokensThisWeek.cachedInputTokens, 10_000_000)
+        XCTAssertEqual(snapshot.dailyUsageLast7Days.map(\.usage.totalTokens), [
+            27_974_994,
+            126_395_029,
+            6_588_974,
+            35_779_928,
+            49_044_300,
+            15_678_028,
+            50_000_000
+        ])
+        XCTAssertEqual(snapshot.eventCount, 2)
     }
 
-    func testApplyBuildsAPISnapshotWithoutLocalTokenTotals() throws {
+    func testApplyMergesAPIRateLimitsWithLocalTokenTotals() throws {
         let now = try XCTUnwrap(codexTestDate("2026-05-25T04:20:00.000Z"))
         let localSnapshot = CodexUsageSnapshot(
             latestEvent: CodexUsageEvent(
@@ -140,10 +167,9 @@ final class CodexUsageAPIClientTests: XCTestCase {
         XCTAssertEqual(snapshot.rateLimits, apiRateLimits)
         XCTAssertEqual(snapshot.latestEvent?.timestamp, now)
         XCTAssertEqual(snapshot.latestEvent?.rateLimits, apiRateLimits)
-        XCTAssertEqual(snapshot.latestEvent?.totalUsage.totalTokens, 0)
-        XCTAssertEqual(snapshot.tokensToday.totalTokens, 0)
-        XCTAssertEqual(snapshot.tokensThisWeek.totalTokens, 0)
-        XCTAssertEqual(snapshot.eventCount, 0)
+        XCTAssertEqual(snapshot.tokensToday.totalTokens, 1_042_000)
+        XCTAssertEqual(snapshot.tokensThisWeek.totalTokens, 7_600_000)
+        XCTAssertEqual(snapshot.eventCount, 12)
     }
 
     func testFetchRateLimitsFallsBackToCodexEndpointWhenPrimaryFails() async throws {
@@ -174,7 +200,7 @@ final class CodexUsageAPIClientTests: XCTestCase {
         ])
     }
 
-    func testLoadSnapshotReturnsEmptyWhenAPIFetchFailsWithoutCachedAPIData() async throws {
+    func testLoadSnapshotKeepsLocalTokenTotalsWhenAPIFetchFailsWithoutCachedAPIData() async throws {
         let now = try XCTUnwrap(codexTestDate("2026-05-25T04:20:00.000Z"))
         let codexHome = try makeCodexHomeWithAuthAndLocalUsage()
         defer {
@@ -190,19 +216,26 @@ final class CodexUsageAPIClientTests: XCTestCase {
         let snapshot = await client.loadSnapshot(codexHome: codexHome, now: now)
 
         XCTAssertNil(snapshot.rateLimits)
-        XCTAssertNil(snapshot.latestEvent)
-        XCTAssertEqual(snapshot.tokensToday.totalTokens, 0)
-        XCTAssertEqual(snapshot.eventCount, 0)
+        XCTAssertNil(snapshot.latestEvent?.rateLimits)
+        XCTAssertEqual(snapshot.tokensToday.totalTokens, 1_042_000)
+        XCTAssertEqual(snapshot.eventCount, 1)
 
         let summary = CodexUsageSummary(snapshot: snapshot, now: now)
         XCTAssertEqual(summary.planText, "--")
         XCTAssertEqual(summary.fiveHourLimitText, "--")
         XCTAssertEqual(summary.sevenDayLimitText, "--")
+        XCTAssertEqual(summary.todayTokensText, "1.0M")
     }
 
-    private func makeCodexHomeWithAuthAndLocalUsage() throws -> URL {
+    private func makeCodexHomeWithAuthAndLocalUsage(
+        eventLines: [String] = [
+            """
+            {"timestamp":"2026-05-25T04:10:00.000Z","type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000000,"cached_input_tokens":700000,"output_tokens":42000,"total_tokens":1042000}},"rate_limits":{"primary":{"used_percent":2,"window_minutes":300},"secondary":{"used_percent":8,"window_minutes":10080},"plan_type":"stale"}}}
+            """
+        ]
+    ) throws -> URL {
         let codexHome = FileManager.default.temporaryDirectory
-            .appendingPathComponent("CodexWatcherTests-api-only-\(UUID().uuidString)")
+            .appendingPathComponent("CodexWatcherTests-hybrid-\(UUID().uuidString)")
         let sessions = codexHome.appendingPathComponent("sessions/2026/05/25")
         try FileManager.default.createDirectory(at: sessions, withIntermediateDirectories: true)
         try """
@@ -212,9 +245,7 @@ final class CodexUsageAPIClientTests: XCTestCase {
             atomically: true,
             encoding: .utf8
         )
-        try """
-        {"timestamp":"2026-05-25T04:10:00.000Z","type":"event_msg","payload":{"type":"token_count","info":{"last_token_usage":{"input_tokens":1000000,"cached_input_tokens":700000,"output_tokens":42000,"total_tokens":1042000}},"rate_limits":{"primary":{"used_percent":2,"window_minutes":300},"secondary":{"used_percent":8,"window_minutes":10080},"plan_type":"stale"}}}
-        """.write(
+        try eventLines.joined(separator: "\n").write(
             to: sessions.appendingPathComponent("rollout-local.jsonl"),
             atomically: true,
             encoding: .utf8

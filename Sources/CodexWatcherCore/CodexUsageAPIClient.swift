@@ -178,57 +178,179 @@ public struct CodexUsageAPIClient: Sendable {
     }
 
     public func loadSnapshot(now: Date = Date()) async -> CodexUsageSnapshot {
-        await loadAPISnapshot(now: now)
+        let localSnapshot = CodexUsageLogStore.loadSnapshot(codexHome: authStore.codexHome, now: now)
+        return await loadAPISnapshot(localSnapshot: localSnapshot, now: now)
     }
 
     public func loadSnapshot(codexHome: URL, now: Date = Date()) async -> CodexUsageSnapshot {
+        let localSnapshot = CodexUsageLogStore.loadSnapshot(codexHome: codexHome, now: now)
         var client = self
         client.authStore = CodexAuthStore(codexHome: codexHome)
-        return await client.loadAPISnapshot(now: now)
+        return await client.loadAPISnapshot(localSnapshot: localSnapshot, now: now)
     }
 
-    private func loadAPISnapshot(now: Date) async -> CodexUsageSnapshot {
+    private func loadAPISnapshot(localSnapshot: CodexUsageSnapshot, now: Date) async -> CodexUsageSnapshot {
         let profile = await profileLoader.loadUsageProfile(now: now)
         do {
             let rateLimits = try await fetchRateLimits()
             cache.save(rateLimits: rateLimits, fetchedAt: now)
-            return Self.apiSnapshot(rateLimits: rateLimits, now: now, profile: profile)
+            return Self.hybridSnapshot(
+                localSnapshot: localSnapshot,
+                rateLimits: rateLimits,
+                profile: profile,
+                now: now,
+                usesCurrentAPIRefreshTime: true
+            )
         } catch {
             if let cachedRateLimits = cache.load(now: now) {
-                return Self.apiSnapshot(rateLimits: cachedRateLimits, now: now, profile: profile)
+                return Self.hybridSnapshot(
+                    localSnapshot: localSnapshot,
+                    rateLimits: cachedRateLimits,
+                    profile: profile,
+                    now: now,
+                    usesCurrentAPIRefreshTime: true
+                )
             }
-            if let profile {
-                return Self.profileSnapshot(profile: profile, now: now)
-            }
-            return CodexUsageSnapshot()
+            return Self.hybridSnapshot(
+                localSnapshot: localSnapshot,
+                rateLimits: nil,
+                profile: profile,
+                now: now,
+                usesCurrentAPIRefreshTime: profile != nil
+            )
         }
     }
 
     public static func apply(
         apiRateLimits: RateLimits,
-        to _: CodexUsageSnapshot,
+        to snapshot: CodexUsageSnapshot,
         now: Date
     ) -> CodexUsageSnapshot {
-        apiSnapshot(rateLimits: apiRateLimits, now: now, profile: nil)
+        hybridSnapshot(
+            localSnapshot: snapshot,
+            rateLimits: apiRateLimits,
+            profile: nil,
+            now: now,
+            usesCurrentAPIRefreshTime: true
+        )
     }
 
-    private static func apiSnapshot(rateLimits: RateLimits, now: Date, profile: CodexUsageProfile?) -> CodexUsageSnapshot {
+    private static func hybridSnapshot(
+        localSnapshot: CodexUsageSnapshot,
+        rateLimits: RateLimits?,
+        profile: CodexUsageProfile?,
+        now: Date,
+        usesCurrentAPIRefreshTime: Bool
+    ) -> CodexUsageSnapshot {
+        let dailyUsage = mergedDailyUsage(localSnapshot: localSnapshot, profile: profile, now: now)
+        let weekUsage = usageThisWeek(from: dailyUsage, fallback: localSnapshot.tokensThisWeek, now: now)
+
         return CodexUsageSnapshot(
-            latestEvent: CodexUsageEvent(timestamp: now, rateLimits: rateLimits),
+            latestEvent: mergedLatestEvent(
+                localSnapshot: localSnapshot,
+                rateLimits: rateLimits,
+                now: now,
+                usesCurrentAPIRefreshTime: usesCurrentAPIRefreshTime
+            ),
             rateLimits: rateLimits,
-            tokensToday: profile?.tokensToday ?? TokenUsage(),
-            tokensThisWeek: profile?.tokensThisWeek ?? TokenUsage(),
-            dailyUsageLast7Days: profile?.dailyUsageLast7Days ?? []
+            tokensLast5Hours: localSnapshot.tokensLast5Hours,
+            tokensLast7Days: localSnapshot.tokensLast7Days,
+            tokensToday: localSnapshot.tokensToday,
+            tokensThisWeek: weekUsage,
+            dailyUsageLast7Days: dailyUsage,
+            eventCount: localSnapshot.eventCount
         )
     }
 
-    private static func profileSnapshot(profile: CodexUsageProfile, now: Date) -> CodexUsageSnapshot {
-        return CodexUsageSnapshot(
-            latestEvent: CodexUsageEvent(timestamp: now),
-            tokensToday: profile.tokensToday,
-            tokensThisWeek: profile.tokensThisWeek,
-            dailyUsageLast7Days: profile.dailyUsageLast7Days
-        )
+    private static func mergedLatestEvent(
+        localSnapshot: CodexUsageSnapshot,
+        rateLimits: RateLimits?,
+        now: Date,
+        usesCurrentAPIRefreshTime: Bool
+    ) -> CodexUsageEvent? {
+        if let rateLimits {
+            var latest = localSnapshot.latestEvent ?? CodexUsageEvent(timestamp: now)
+            latest.timestamp = now
+            latest.rateLimits = rateLimits
+            return latest
+        }
+
+        if var latest = localSnapshot.latestEvent {
+            latest.rateLimits = nil
+            return latest
+        }
+
+        if usesCurrentAPIRefreshTime {
+            return CodexUsageEvent(timestamp: now)
+        }
+
+        return nil
+    }
+
+    private static func mergedDailyUsage(
+        localSnapshot: CodexUsageSnapshot,
+        profile: CodexUsageProfile?,
+        now: Date
+    ) -> [CodexDailyUsage] {
+        guard let profileDays = profile?.dailyUsageLast7Days,
+              !profileDays.isEmpty else {
+            return localSnapshot.dailyUsageLast7Days
+        }
+
+        let calendar = usageCalendar()
+        let today = calendar.startOfDay(for: now)
+        let localTodayUsage = localSnapshot.tokensToday
+        var replacedToday = false
+        var mergedDays = profileDays.map { day in
+            guard calendar.isDate(day.date, inSameDayAs: today) else {
+                return day
+            }
+            replacedToday = true
+            return CodexDailyUsage(date: day.date, usage: localTodayUsage)
+        }
+
+        if !replacedToday {
+            let localToday = localSnapshot.dailyUsageLast7Days.first { day in
+                calendar.isDate(day.date, inSameDayAs: today)
+            }
+            mergedDays.append(CodexDailyUsage(date: localToday?.date ?? today, usage: localTodayUsage))
+            mergedDays.sort { lhs, rhs in
+                lhs.date < rhs.date
+            }
+            if mergedDays.count > 7 {
+                mergedDays = Array(mergedDays.suffix(7))
+            }
+        }
+
+        return mergedDays
+    }
+
+    private static func usageThisWeek(
+        from dailyUsage: [CodexDailyUsage],
+        fallback: TokenUsage,
+        now: Date
+    ) -> TokenUsage {
+        guard !dailyUsage.isEmpty else {
+            return fallback
+        }
+
+        let calendar = usageCalendar()
+        let today = calendar.startOfDay(for: now)
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? today
+
+        return dailyUsage.reduce(TokenUsage()) { partial, day in
+            let dayStart = calendar.startOfDay(for: day.date)
+            guard dayStart >= startOfWeek && dayStart <= today else {
+                return partial
+            }
+            return partial + day.usage
+        }
+    }
+
+    private static func usageCalendar() -> Calendar {
+        var calendar = Calendar(identifier: .iso8601)
+        calendar.timeZone = .autoupdatingCurrent
+        return calendar
     }
 }
 
