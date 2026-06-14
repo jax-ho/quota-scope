@@ -166,19 +166,39 @@ public struct CodexAppServerUsageClient: CodexUsageProfileLoading {
             return nil
         }
 
-        let requestLines = [
-            #"{"method":"initialize","id":1,"params":{"clientInfo":{"name":"quotascope","title":"QuotaScope","version":"1"},"capabilities":{"experimentalApi":true}}}"#,
+        let accumulator = UsageReadAccumulator()
+        let semaphore = DispatchSemaphore(value: 0)
+        output.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            guard !data.isEmpty else {
+                return
+            }
+            if accumulator.append(data) != nil {
+                semaphore.signal()
+            }
+        }
+
+        let initializeLine = #"{"method":"initialize","id":1,"params":{"clientInfo":{"name":"quotascope","title":"QuotaScope","version":"1"},"capabilities":{"experimentalApi":true}}}"#
+        input.fileHandleForWriting.write(Data((initializeLine + "\n").utf8))
+        guard accumulator.waitForInitialize(timeout: timeout) else {
+            input.fileHandleForWriting.closeFile()
+            output.fileHandleForReading.readabilityHandler = nil
+            if process.isRunning {
+                process.terminate()
+            }
+            return nil
+        }
+
+        let usageLines = [
             #"{"method":"initialized","params":{}}"#,
             #"{"method":"account/usage/read","id":2,"params":{}}"#
         ]
-        let requestData = Data((requestLines.joined(separator: "\n") + "\n").utf8)
-        input.fileHandleForWriting.write(requestData)
-        input.fileHandleForWriting.closeFile()
+        input.fileHandleForWriting.write(Data((usageLines.joined(separator: "\n") + "\n").utf8))
 
-        let deadline = Date().addingTimeInterval(timeout)
-        while process.isRunning && Date() < deadline {
-            Thread.sleep(forTimeInterval: 0.05)
-        }
+        _ = semaphore.wait(timeout: .now() + timeout)
+        input.fileHandleForWriting.closeFile()
+        output.fileHandleForReading.readabilityHandler = nil
+
         if process.isRunning {
             process.terminate()
             Thread.sleep(forTimeInterval: 0.1)
@@ -187,26 +207,75 @@ public struct CodexAppServerUsageClient: CodexUsageProfileLoading {
             }
         }
 
-        let data = output.fileHandleForReading.readDataToEndOfFile()
-        return usageResultData(fromJSONLines: data)
+        return accumulator.result
     }
 
-    private static func usageResultData(fromJSONLines data: Data) -> Data? {
-        guard let text = String(data: data, encoding: .utf8) else {
+    static func usageResultData(fromJSONLine data: Data) -> Data? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              object["id"] as? Int == 2,
+              let result = object["result"] else {
             return nil
         }
 
-        for line in text.split(whereSeparator: \.isNewline) {
-            guard let lineData = String(line).data(using: .utf8),
-                  let object = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
-                  object["id"] as? Int == 2,
-                  let result = object["result"] else {
-                continue
-            }
-            return try? JSONSerialization.data(withJSONObject: result)
+        return try? JSONSerialization.data(withJSONObject: result)
+    }
+}
+
+private final class UsageReadAccumulator: @unchecked Sendable {
+    private let lock = NSLock()
+    private let initializeSemaphore = DispatchSemaphore(value: 0)
+    private var buffer = Data()
+    private var sawInitialize = false
+    private(set) var result: Data?
+
+    func waitForInitialize(timeout: TimeInterval) -> Bool {
+        if initialized {
+            return true
+        }
+        return initializeSemaphore.wait(timeout: .now() + timeout) == .success
+    }
+
+    func append(_ data: Data) -> Data? {
+        lock.lock()
+        defer {
+            lock.unlock()
         }
 
-        return nil
+        buffer.append(data)
+        let newline = Data([0x0A])
+        while let range = buffer.firstRange(of: newline) {
+            let line = buffer[..<range.lowerBound]
+            buffer.removeSubrange(buffer.startIndex..<range.upperBound)
+            if sawInitializeResponse(Data(line)) {
+                sawInitialize = true
+                initializeSemaphore.signal()
+            }
+            guard result == nil,
+                  let resultData = CodexAppServerUsageClient.usageResultData(fromJSONLine: Data(line)) else {
+                continue
+            }
+            result = resultData
+            return resultData
+        }
+
+        return result
+    }
+
+    private var initialized: Bool {
+        lock.lock()
+        defer {
+            lock.unlock()
+        }
+        return sawInitialize
+    }
+
+    private func sawInitializeResponse(_ data: Data) -> Bool {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              object["id"] as? Int == 1,
+              object["result"] != nil else {
+            return false
+        }
+        return true
     }
 }
 

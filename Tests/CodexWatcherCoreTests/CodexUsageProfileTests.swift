@@ -2,6 +2,18 @@ import XCTest
 @testable import CodexWatcherCore
 
 final class CodexUsageProfileTests: XCTestCase {
+    func testExtractsUsageResultFromJSONRPCLine() throws {
+        let line = Data("""
+        {"id":2,"result":{"dailyUsageBuckets":[{"startDate":"2026-06-14","tokens":42}],"summary":{"lifetimeTokens":42}}}
+        """.utf8)
+
+        let result = try XCTUnwrap(CodexAppServerUsageClient.usageResultData(fromJSONLine: line))
+        let object = try JSONSerialization.jsonObject(with: result) as? [String: Any]
+
+        XCTAssertNotNil(object?["dailyUsageBuckets"])
+        XCTAssertNil(object?["id"])
+    }
+
     func testDecodesAppServerUsageBucketsIntoLastSevenDaysProfile() throws {
         let data = Data("""
         {
