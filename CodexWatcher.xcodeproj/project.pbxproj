@@ -19,6 +19,8 @@
 		A00000000000000000000029 /* CodexWatcherWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A00000000000000000000019 /* CodexWatcherWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A0000000000000000000002A /* CodexUsageAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001B /* CodexUsageAPIClient.swift */; };
 		A0000000000000000000002B /* CodexUsageAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001B /* CodexUsageAPIClient.swift */; };
+		A0000000000000000000002C /* CodexUsageProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001C /* CodexUsageProfile.swift */; };
+		A0000000000000000000002D /* CodexUsageProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001C /* CodexUsageProfile.swift */; };
 		A00000000000000000000050 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000004F /* Assets.xcassets */; };
 		A00000000000000000000051 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000004F /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -57,6 +59,7 @@
 		A00000000000000000000016 /* CodexUsageLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexUsageLogStore.swift; sourceTree = "<group>"; };
 		A00000000000000000000017 /* CodexUsageSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexUsageSummary.swift; sourceTree = "<group>"; };
 		A0000000000000000000001B /* CodexUsageAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexUsageAPIClient.swift; sourceTree = "<group>"; };
+		A0000000000000000000001C /* CodexUsageProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexUsageProfile.swift; sourceTree = "<group>"; };
 		A0000000000000000000001A /* CodexWatcherWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CodexWatcherWidget.entitlements; sourceTree = "<group>"; };
 		A0000000000000000000004F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Xcode/Assets.xcassets; sourceTree = "<group>"; };
 		A00000000000000000000018 /* QuotaScope.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuotaScope.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -130,6 +133,7 @@
 				A00000000000000000000016 /* CodexUsageLogStore.swift */,
 				A00000000000000000000017 /* CodexUsageSummary.swift */,
 				A0000000000000000000001B /* CodexUsageAPIClient.swift */,
+				A0000000000000000000001C /* CodexUsageProfile.swift */,
 			);
 			name = CodexWatcherCore;
 			path = Sources/CodexWatcherCore;
@@ -241,6 +245,7 @@
 				A00000000000000000000023 /* CodexUsageLogStore.swift in Sources */,
 				A00000000000000000000024 /* CodexUsageSummary.swift in Sources */,
 				A0000000000000000000002A /* CodexUsageAPIClient.swift in Sources */,
+				A0000000000000000000002C /* CodexUsageProfile.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -253,6 +258,7 @@
 				A00000000000000000000027 /* CodexUsageLogStore.swift in Sources */,
 				A00000000000000000000028 /* CodexUsageSummary.swift in Sources */,
 				A0000000000000000000002B /* CodexUsageAPIClient.swift in Sources */,
+				A0000000000000000000002D /* CodexUsageProfile.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

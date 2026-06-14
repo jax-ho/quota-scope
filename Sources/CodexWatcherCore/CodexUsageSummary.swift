@@ -3,6 +3,7 @@ import Foundation
 public struct CodexWidgetWeeklyBar: Equatable, Sendable {
     public let label: String
     public let valueText: String
+    public let isValueTextVisible: Bool
     public let normalizedHeight: Double
     public let isToday: Bool
 }
@@ -188,6 +189,7 @@ public struct CodexUsageSummary: Equatable, Sendable {
             return CodexWidgetWeeklyBar(
                 label: isToday ? "Today" : formatter.string(from: day.date),
                 valueText: Self.shortWholeNumber(day.usage.totalTokens),
+                isValueTextVisible: true,
                 normalizedHeight: min(max(normalizedHeight, 0), 1),
                 isToday: isToday
             )

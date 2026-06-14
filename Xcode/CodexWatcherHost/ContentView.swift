@@ -45,6 +45,7 @@ struct ContentView: View {
                     cache: summary.thisWeekInputCacheText,
                     output: summary.thisWeekOutputText
                 )
+                historyCard()
             }
 
             VStack(alignment: .leading, spacing: 6) {
@@ -115,5 +116,31 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
         .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    @ViewBuilder
+    private func historyCard() -> some View {
+        if !summary.weeklyBars.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Last 7 Days")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                ForEach(Array(summary.weeklyBars.enumerated()), id: \.offset) { _, bar in
+                    HStack {
+                        Text(bar.label)
+                            .font(.caption.weight(bar.isToday ? .semibold : .regular))
+                            .foregroundStyle(bar.isToday ? .primary : .secondary)
+                        Spacer()
+                        Text(bar.valueText)
+                            .font(.caption.weight(.semibold))
+                            .monospacedDigit()
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+        }
     }
 }
