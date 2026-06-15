@@ -1,39 +1,42 @@
 # QuotaScope
 
-QuotaScope is a macOS WidgetKit widget that monitors Codex quota from the
-ChatGPT Codex usage API and local Codex token events.
+QuotaScope is a macOS WidgetKit widget that monitors Codex quota and token
+activity from local Codex session logs on this Mac.
 
 It shows:
 
-- plan type from the Codex usage API
-- 5-hour Codex limit remaining from `rate_limit.primary_window.used_percent`
-- 7-day Codex limit remaining from `rate_limit.secondary_window.used_percent`
-- today's token total from local Codex `token_count` events
-- historical last-7-days token totals from Codex `account/usage/read`, with
-  local token events as the fallback when that API is unavailable
+- plan type from the latest local `token_count` rate-limit payload, when
+  available
+- 5-hour and 7-day remaining quota from local `rate_limits` used percentages
+- today, this week, and last-7-days token totals from local `token_count` events
+
+## Data Scope
+
+The host app and WidgetKit extension use local data only. They do not call the
+Codex usage API or the Codex app-server `account/usage/read` endpoint for the
+visible numbers.
+
+QuotaScope reads `.jsonl` session files under:
+
+```text
+~/.codex/sessions
+~/.codex/archived_sessions
+```
+
+The token totals therefore cover Codex activity recorded on this Mac. Activity
+from another machine is not included unless its session logs are present here.
+Day and week buckets use the Mac's current local time zone.
 
 ## Why This Approach
 
-Codex writes local session events as JSONL under `~/.codex/sessions` and
-`~/.codex/archived_sessions`. Those `token_count` events are the most useful
-source for today's token total because the account token-activity API can lag
-while Codex is actively used.
+QuotaScope intentionally does not use service-side daily token buckets for the
+visible token totals. API-provided daily buckets can be aggregated on server
+time boundaries that do not line up with the local day, so the widget keeps one
+consistent local-data scope for today, this week, and the last-7-days chart.
 
-QuotaScope reads `~/.codex/auth.json` for the ChatGPT access token and account
-id, then requests rate limits from:
-
-```text
-https://chatgpt.com/backend-api/wham/usage
-https://chatgpt.com/backend-api/codex/usage
-```
-
-For historical token totals, QuotaScope asks the Codex app-server
-`account/usage/read` API for `dailyUsageBuckets`. When those buckets are
-available, historical days use the API values, but today's bucket is always
-replaced with the local token total. If the historical API is unavailable,
-QuotaScope falls back to local session events for the last-7-days chart. If the
-rate-limit API is unavailable, remaining quota values display as `--` unless a
-short-lived QuotaScope API response cache is available.
+Remaining quota is also read from local `token_count` events when Codex emits a
+`rate_limits` payload. If no local rate-limit payload is available, QuotaScope
+shows `--` for those quota values instead of filling them from an API.
 
 ## Build And Install
 
@@ -79,10 +82,9 @@ macOS widget lives in `CodexWatcher.xcodeproj` as a host app plus
 - WidgetKit controls the real refresh cadence. The widget asks for a new
   timeline roughly every 1 minute, but macOS may adjust that schedule.
 - The WidgetKit extension is sandboxed so macOS will register it as a real
-  widget. Its entitlements allow network access and read-only access to
-  `~/.codex/` for `auth.json` and local session events.
+  widget. Its entitlements allow read-only access to `~/.codex/` for local
+  session events.
 - Codex stores limit data as used percentages; the widget displays remaining
   percentages (`100 - used_percent`) so the number means quota left.
-- Today's token total comes from local Codex session JSONL. Historical daily
-  totals prefer Codex app-server `account/usage/read` daily buckets and fall
-  back to local session JSONL when the API is unavailable.
+- The parser uses `last_token_usage` from each local `token_count` event for
+  bucketed totals.

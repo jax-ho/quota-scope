@@ -10,8 +10,6 @@ struct CodexUsageEntry: TimelineEntry {
 }
 
 struct CodexUsageProvider: TimelineProvider {
-    private static let apiClient = CodexUsageAPIClient()
-
     func placeholder(in context: Context) -> CodexUsageEntry {
         Self.sampleEntry
     }
@@ -25,7 +23,7 @@ struct CodexUsageProvider: TimelineProvider {
             }
 
             let now = Date()
-            let snapshot = await Self.apiClient.loadSnapshot(now: now)
+            let snapshot = CodexUsageLogStore.loadSnapshot(now: now)
             completion(CodexUsageEntry(date: now, snapshot: snapshot))
         }
     }
@@ -33,7 +31,7 @@ struct CodexUsageProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<CodexUsageEntry>) -> Void) {
         Task {
             let now = Date()
-            let entry = CodexUsageEntry(date: now, snapshot: await Self.apiClient.loadSnapshot(now: now))
+            let entry = CodexUsageEntry(date: now, snapshot: CodexUsageLogStore.loadSnapshot(now: now))
             let nextUpdate = now.addingTimeInterval(CodexWidgetRefreshPolicy.timelineRefreshInterval)
             completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
         }
@@ -1094,7 +1092,7 @@ struct CodexWatcherWidget: Widget {
             CodexWatcherWidgetView(entry: entry)
         }
         .configurationDisplayName("QuotaScope")
-        .description("Track Codex quota from the usage API and local usage.")
+        .description("Track Codex quota and token usage from local Codex events.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         .contentMarginsDisabled()
         .containerBackgroundRemovable(false)

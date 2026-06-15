@@ -81,7 +81,7 @@ final class CodexUsageAPIClientTests: XCTestCase {
         XCTAssertEqual(summary.planText, "prolite")
     }
 
-    func testLoadSnapshotUsesLocalTodayAndAPIHistoricalBuckets() async throws {
+    func testLoadSnapshotKeepsTokenHistoryLocalWhenUsageProfileExists() async throws {
         let now = try XCTUnwrap(codexTestDate("2026-06-14T12:00:00.000Z"))
         let codexHome = try makeCodexHomeWithAuthAndLocalUsage(
             eventLines: [
@@ -112,7 +112,7 @@ final class CodexUsageAPIClientTests: XCTestCase {
         let client = CodexUsageAPIClient(
             authStore: CodexAuthStore(codexHome: codexHome),
             cache: CodexUsageAPIRateLimitCache(url: nil),
-            profileLoader: StubUsageProfileLoader(profile: profile),
+            profileLoader: UnexpectedUsageProfileLoader(profile: profile),
             httpClient: StubHTTPClient(data: codexUsageAPIResponseData())
         )
 
@@ -123,15 +123,15 @@ final class CodexUsageAPIClientTests: XCTestCase {
         XCTAssertEqual(snapshot.tokensToday.inputTokens, 30_000_000)
         XCTAssertEqual(snapshot.tokensToday.cachedInputTokens, 10_000_000)
         XCTAssertEqual(snapshot.tokensToday.outputTokens, 20_000_000)
-        XCTAssertEqual(snapshot.tokensThisWeek.totalTokens, 311_461_253)
+        XCTAssertEqual(snapshot.tokensThisWeek.totalTokens, 1_049_000_000)
         XCTAssertEqual(snapshot.tokensThisWeek.cachedInputTokens, 10_000_000)
         XCTAssertEqual(snapshot.dailyUsageLast7Days.map(\.usage.totalTokens), [
-            27_974_994,
-            126_395_029,
-            6_588_974,
-            35_779_928,
-            49_044_300,
-            15_678_028,
+            0,
+            0,
+            0,
+            0,
+            0,
+            999_000_000,
             50_000_000
         ])
         XCTAssertEqual(snapshot.eventCount, 2)
@@ -283,6 +283,15 @@ private struct StubUsageProfileLoader: CodexUsageProfileLoading {
 
     func loadUsageProfile(now _: Date) async -> CodexUsageProfile? {
         profile
+    }
+}
+
+private struct UnexpectedUsageProfileLoader: CodexUsageProfileLoading {
+    var profile: CodexUsageProfile?
+
+    func loadUsageProfile(now _: Date) async -> CodexUsageProfile? {
+        XCTFail("Token history should come from local JSONL, not account/usage/read.")
+        return profile
     }
 }
 

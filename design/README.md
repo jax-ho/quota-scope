@@ -1,7 +1,8 @@
-# QuotaScope WidgetKit Figma Design
+# QuotaScope WidgetKit Design Assets
 
-This folder contains a fallback generator for the QuotaScope macOS WidgetKit
-design direction.
+This folder contains historical design assets and fallback generators for the
+QuotaScope macOS WidgetKit layout. The current SwiftUI implementation is the
+source of truth for behavior and copy.
 
 The Figma MCP connector returned a Starter plan tool-call limit before a new
 file could be created or the app icon source could be inspected. The generator
@@ -21,12 +22,12 @@ icon placeholder with a native macOS app-icon feel.
 - `QuotaScope / Widget / Large`
 - `QuotaScope / Design System`
 
-The three widget frames use distinct information architecture:
+The generated frames explore three widget sizes:
 
 - Small: glanceable quotas, today token total, compact M/C/O breakdown.
 - Medium: two-column quota and token summary for everyday desktop use.
-- Large: structured dashboard with quota overview, today/week breakdowns,
-  status chips, and a compact future burn-rate placeholder.
+- Large: structured dashboard with quota overview, today/week breakdowns, and
+  status details.
 
 ## Running In Figma
 
@@ -48,8 +49,8 @@ node design/generate_quota_scope_preview.js
 ```
 
 Open `quota_scope_widgetkit_preview.svg` to inspect the full design board. It is
-not a replacement for the Figma file, but it preserves the visual direction and
-layout while the Figma connector is rate-limited.
+not a replacement for the SwiftUI widget or a guarantee that every label still
+matches the app; use it as visual reference.
 
 ## Design Tokens
 

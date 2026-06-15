@@ -2,7 +2,6 @@ import SwiftUI
 import WidgetKit
 
 struct ContentView: View {
-    private let apiClient = CodexUsageAPIClient()
     private let metricColumns = [
         GridItem(.adaptive(minimum: 140), spacing: 16, alignment: .top)
     ]
@@ -77,7 +76,7 @@ struct ContentView: View {
     @MainActor
     private func reload(reloadWidgets: Bool) async {
         let now = Date()
-        let snapshot = await apiClient.loadSnapshot(now: now)
+        let snapshot = CodexUsageLogStore.loadSnapshot(now: now)
         summary = CodexUsageSummary(snapshot: snapshot, now: now)
         if reloadWidgets {
             WidgetCenter.shared.reloadAllTimelines()
