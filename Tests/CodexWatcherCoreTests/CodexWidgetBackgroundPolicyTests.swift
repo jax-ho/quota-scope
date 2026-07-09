@@ -2,16 +2,28 @@ import Foundation
 import XCTest
 
 final class CodexWidgetBackgroundPolicyTests: XCTestCase {
-    func testWidgetBackgroundIsOnlyDeclaredAsWidgetContainerBackground() throws {
+    func testWidgetBackgroundUsesContainerBackgroundWithVenturaFallback() throws {
         let source = try widgetSource()
 
+        XCTAssertTrue(
+            source.contains(".quotaWidgetBackground(palette: palette, family: renderedFamily)"),
+            "Widget background policy should be centralized so macOS availability handling stays consistent."
+        )
+        XCTAssertTrue(
+            source.contains("if #available(macOS 14.0, *)"),
+            "macOS 14 should keep the WidgetKit container background path while Ventura uses a normal background fallback."
+        )
         XCTAssertTrue(
             source.contains(".containerBackground(for: .widget)"),
             "WidgetKit needs a container background so macOS can render desktop widget vibrancy correctly."
         )
+        XCTAssertTrue(
+            source.contains("self.background {\n                WidgetBackground(palette: palette, family: family)"),
+            "macOS 13 needs a normal SwiftUI background because the widget container background API is macOS 14+."
+        )
         XCTAssertFalse(
-            source.contains(".background {\n            WidgetBackground()"),
-            "Do not render WidgetBackground as a normal SwiftUI background; macOS treats it as content in vibrant desktop states."
+            source.contains(".background {\n            WidgetBackground(palette: palette, family: renderedFamily)"),
+            "The main widget view should delegate background decisions to the compatibility helper."
         )
     }
 
@@ -145,6 +157,31 @@ final class CodexWidgetBackgroundPolicyTests: XCTestCase {
         XCTAssertTrue(hostInfo.contains("<string>$(CURRENT_PROJECT_VERSION)</string>"))
         XCTAssertTrue(widgetInfo.contains("<string>$(CURRENT_PROJECT_VERSION)</string>"))
         XCTAssertTrue(project.contains("CURRENT_PROJECT_VERSION = 7;"))
+    }
+
+    func testMinimumMacOSSupportsVentura() throws {
+        let packageRoot = try packageRoot()
+        let package = try String(
+            contentsOf: packageRoot.appendingPathComponent("Package.swift"),
+            encoding: .utf8
+        )
+        let hostInfo = try String(
+            contentsOf: packageRoot.appendingPathComponent("Xcode/CodexWatcherHost/Info.plist"),
+            encoding: .utf8
+        )
+        let project = try String(
+            contentsOf: packageRoot.appendingPathComponent("CodexWatcher.xcodeproj/project.pbxproj"),
+            encoding: .utf8
+        )
+        let releaseConfig = try String(
+            contentsOf: packageRoot.appendingPathComponent("scripts/release-config.sh"),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(package.contains(".macOS(.v13)"))
+        XCTAssertTrue(hostInfo.contains("<string>13.0</string>"))
+        XCTAssertTrue(project.contains("MACOSX_DEPLOYMENT_TARGET = 13.0;"))
+        XCTAssertTrue(releaseConfig.contains("MIN_MACOS_VERSION=\"${MIN_MACOS_VERSION:-13.0}\""))
     }
 
     private func widgetSource() throws -> String {

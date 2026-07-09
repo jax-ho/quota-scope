@@ -109,9 +109,7 @@ struct CodexWatcherWidgetView: View {
             }
         }
         .environment(\.widgetPalette, palette)
-        .containerBackground(for: .widget) {
-            WidgetBackground(palette: palette, family: renderedFamily)
-        }
+        .quotaWidgetBackground(palette: palette, family: renderedFamily)
     }
 }
 
@@ -260,6 +258,21 @@ private struct WidgetBackground: View {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(palette.widgetStroke, lineWidth: 1)
             }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func quotaWidgetBackground(palette: WidgetPalette, family: WidgetFamily) -> some View {
+        if #available(macOS 14.0, *) {
+            self.containerBackground(for: .widget) {
+                WidgetBackground(palette: palette, family: family)
+            }
+        } else {
+            self.background {
+                WidgetBackground(palette: palette, family: family)
+            }
+        }
     }
 }
 

@@ -21,7 +21,7 @@ struct ContentView: View {
                     Text("QuotaScope")
                         .font(.title2.weight(.semibold))
                 }
-                Text("Add the WidgetKit widget from macOS Edit Widgets, then drag it to your desktop.")
+                Text("Add the WidgetKit widget from Notification Center on macOS 13, or from desktop Edit Widgets on macOS 14 and later.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -50,7 +50,7 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("How to add")
                     .font(.headline)
-                Text("Control-click the desktop wallpaper, choose Edit Widgets, search for QuotaScope, then drag the widget to the desktop.")
+                Text("On macOS 13, open Notification Center, click Edit Widgets, search for QuotaScope, then add the widget. On macOS 14 or later, you can also drag it to the desktop from Edit Widgets.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

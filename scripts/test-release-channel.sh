@@ -40,6 +40,7 @@ source "$ROOT_DIR/scripts/release-config.sh"
 [[ "${APP_NAME:-}" == "QuotaScope" ]] || fail "APP_NAME should be QuotaScope"
 [[ "${PROJECT_PATH:-}" == "CodexWatcher.xcodeproj" ]] || fail "PROJECT_PATH should point to the Xcode project"
 [[ "${SCHEME_NAME:-}" == "CodexWatcher" ]] || fail "SCHEME_NAME should be CodexWatcher"
+[[ "${MIN_MACOS_VERSION:-}" == "13.0" ]] || fail "MIN_MACOS_VERSION should support macOS Ventura"
 [[ "${HOST_BUNDLE_ID:-}" != local.* ]] || fail "HOST_BUNDLE_ID must be a stable non-local identifier"
 [[ "${WIDGET_BUNDLE_ID:-}" == "${HOST_BUNDLE_ID}.widget" ]] || fail "WIDGET_BUNDLE_ID should derive from HOST_BUNDLE_ID"
 
@@ -49,7 +50,10 @@ fi
 
 assert_contains "CodexWatcher.xcodeproj/project.pbxproj" "PRODUCT_BUNDLE_IDENTIFIER = \"\\$\\(QUOTASCOPE_HOST_BUNDLE_ID\\)\""
 assert_contains "CodexWatcher.xcodeproj/project.pbxproj" "PRODUCT_BUNDLE_IDENTIFIER = \"\\$\\(QUOTASCOPE_WIDGET_BUNDLE_ID\\)\""
+assert_contains "CodexWatcher.xcodeproj/project.pbxproj" "MACOSX_DEPLOYMENT_TARGET = 13\\.0;"
+assert_contains "Package.swift" "\\.macOS\\(\\.v13\\)"
 assert_contains "Xcode/CodexWatcherHost/Info.plist" "\\$\\(MARKETING_VERSION\\)"
+assert_contains "Xcode/CodexWatcherHost/Info.plist" "<string>13\\.0</string>"
 assert_contains "Xcode/CodexWatcherWidget/Info.plist" "\\$\\(MARKETING_VERSION\\)"
 
 bash -n "$ROOT_DIR/scripts/release-config.sh"

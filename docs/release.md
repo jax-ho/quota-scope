@@ -17,6 +17,10 @@ The default bundle identifiers are:
 - Host app: `com.jax.quotascope`
 - Widget extension: `com.jax.quotascope.widget`
 
+The minimum supported system is macOS 13.0 Ventura. On macOS 13, users add the
+widget from Notification Center. On macOS 14 or later, they can also place it
+on the desktop.
+
 If you want to ship under a different namespace, change the defaults in
 `scripts/release-config.sh` and the `QUOTASCOPE_*_BUNDLE_ID` defaults in the
 Xcode project before your first public release.
@@ -217,8 +221,9 @@ shasum -a 256 -c SHA256SUMS
 ```
 
 Then mount the DMG, copy `QuotaScope.app` to Applications, open it once, and
-confirm the QuotaScope widget appears in macOS Edit Widgets. For signed
-Developer ID releases, also check Gatekeeper:
+confirm the QuotaScope widget appears in Notification Center Edit Widgets on
+macOS 13 or desktop Edit Widgets on macOS 14 and later. For signed Developer ID
+releases, also check Gatekeeper:
 
 ```sh
 spctl -a -vv -t open --context context:primary-signature QuotaScope-1.0.0.dmg
